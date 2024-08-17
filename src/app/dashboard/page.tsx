@@ -39,7 +39,7 @@ const Dashboard = () => {
   }, [session, router]);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div></div>;
   }
 
   if (error) {
@@ -49,15 +49,30 @@ const Dashboard = () => {
   return (
     <main className="flex min-h-screen w-full bg-gray-100 text-black">
       <MaxWidthWrapper>
-        <h2>Hi! {session?.user?.name}</h2>
-        <Image
-          src={session?.user?.image ?? "/default-profile-image.jpg"}
-          alt="avatar"
-          width={50}
-          height={50}
-        />
-        <Button onClick={() => router.push("/trip/add")}>Add Trip</Button>
+        <div className="flex items-center justify-center space-x-4">
+          <h2 className="mt-20 text-center">
+            Welcome! {session?.user?.name?.toLocaleUpperCase()}
+          </h2>
+          <Image
+            src={session?.user?.image ?? "/default-profile-image.jpg"}
+            alt="avatar"
+            width={50}
+            height={50}
+            className="mt-20 h-10 w-10 rounded-full"
+          />
+        </div>
 
+        {trips!.length === 0 ? (
+          <div className="flex space-x-4">
+            <h2>Don't have any trips yet? Let's add one</h2>
+            <Button onClick={() => router.push("/trip/add")}>Add Trip</Button>
+          </div>
+        ) : (
+          <div className="flex space-x-4">
+            <h2>Your Trips:</h2>
+            <Button onClick={() => router.push("/trip/add")}>Add Trip</Button>
+          </div>
+        )}
         <div className="mt-6">
           {trips!.length === 0 ? (
             <p>No trips found.</p>

@@ -147,10 +147,8 @@ export function CreateTripForm() {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="my-10 flex w-full flex-col items-start justify-center gap-y-5 px-10"
+        className="my-10 flex w-full flex-col items-start justify-center gap-y-5"
       >
-        <h1 className="mb-5 text-center text-2xl font-bold">Create a Trip</h1>
-
         {/* Name Field */}
         <FormField
           control={form.control}
