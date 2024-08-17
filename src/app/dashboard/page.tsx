@@ -9,7 +9,8 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 import { useEffect } from "react";
-const Page = () => {
+import Image from "next/image";
+const Dashboard = () => {
   const { data: session } = useSession();
   const router = useRouter();
 
@@ -19,13 +20,20 @@ const Page = () => {
     }
   }, [session, router]);
 
+  console.log(session);
   return (
     <main className="flex min-h-screen w-full bg-gray-100 text-black">
       <MaxWidthWrapper>
-        <p>asd</p>
+        <h2>Hi! {session?.user?.name}</h2>
+        <Image
+          src={session?.user?.image ?? "/default-profile-image.jpg"}
+          alt="Profile"
+          width={200}
+          height={200}
+        />
       </MaxWidthWrapper>
     </main>
   );
 };
 
-export default Page;
+export default Dashboard;
