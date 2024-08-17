@@ -1,12 +1,13 @@
 "use client";
 
+// Functions
 import React, { useState } from "react";
+
 import { useRouter } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { api } from "@/trpc/react";
-import { DatePickerWithRange } from "@/components/DatePickerWithRange";
+
+// Components
+import { DatePickerWithRange } from "@/components/ui/DatePickerWithRange";
 import {
   Form,
   FormControl,
@@ -27,9 +28,17 @@ import {
 } from "@/components/ui/select";
 import { Country, State, City } from "country-state-city";
 import type { ICity, ICountry, IState } from "country-state-city";
-import { format } from "date-fns";
 
-// ...
+// ZOD
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+
+// TRPC
+import { api } from "@/trpc/react";
+
+// Date formater
+import { format } from "date-fns";
 
 // Zod Schema for Form Validation
 const tripFormSchema = z.object({
@@ -78,7 +87,7 @@ export function CreateTripForm() {
 
   const createTrip = api.post.create.useMutation({
     onSuccess: () => {
-      router.refresh(); // Refresh the page or navigate if necessary
+      router.refresh();
     },
     onError: (error: unknown) => {
       console.error("Error creating trip:", error);
@@ -86,13 +95,12 @@ export function CreateTripForm() {
   });
 
   function onSubmit(data: z.infer<typeof tripFormSchema>) {
-    console.log("Form submitted with data:", data); // Debugging statement
-
     const { dateRange, ...rest } = data;
     const updatedData = {
       ...rest,
-      startDate: format(dateRange.from, "dd-MM-yyyy"), // assuming you want to format the date as YYYY-MM-DD
-      endDate: format(dateRange.to, "dd-MM-yyyy"), // assuming you want to format the date as YYYY-MM-DD
+      // Convert dateRange to dd-MM-yyyy format
+      startDate: format(dateRange.from, "dd-MM-yyyy"),
+      endDate: format(dateRange.to, "dd-MM-yyyy"),
       durationOfStay: Math.ceil(
         (dateRange.to.getTime() - dateRange.from.getTime()) /
           (1000 * 60 * 60 * 24),

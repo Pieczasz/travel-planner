@@ -8,8 +8,6 @@ import { SessionProvider } from "next-auth/react";
 
 import type { FC } from "react";
 
-// Interfaces
-
 interface ProviderProps {
   children: React.ReactNode;
 }

@@ -11,7 +11,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import AddTripForm from "@/components/AddTripForm";
-const Dashboard = () => {
+const AddTrip = () => {
   const { data: session } = useSession();
   const router = useRouter();
 
@@ -31,4 +31,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default AddTrip;

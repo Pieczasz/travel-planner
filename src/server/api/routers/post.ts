@@ -1,22 +1,12 @@
 import { z } from "zod";
-import {
-  createTRPCRouter,
-  protectedProcedure,
-  publicProcedure,
-} from "@/server/api/trpc";
-import { trips } from "@/server/db/schema"; // Adjust the import path as needed
+
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+
+import { trips } from "@/server/db/schema";
+
 import { and, eq } from "drizzle-orm";
 
 export const postRouter = createTRPCRouter({
-  // Public endpoint for testing or other non-authenticated use cases
-  hello: publicProcedure
-    .input(z.object({ text: z.string() }))
-    .query(({ input }) => {
-      return {
-        greeting: `Hello ${input.text}`,
-      };
-    }),
-
   // Create a new trip
   create: protectedProcedure
     .input(
@@ -28,8 +18,8 @@ export const postRouter = createTRPCRouter({
         hotelDetails: z.string().optional(),
         durationOfStay: z.number().int().min(1).max(14),
         flightNumber: z.string().optional(),
-        startDate: z.string().min(1), // Add this line
-        endDate: z.string().min(1), // Add this line
+        startDate: z.string().min(1),
+        endDate: z.string().min(1),
         createdAt: z.string().optional(),
         updatedAt: z.string().optional(),
       }),
@@ -46,8 +36,8 @@ export const postRouter = createTRPCRouter({
         hotelDetails: input.hotelDetails,
         durationOfStay: input.durationOfStay,
         flightNumber: input.flightNumber,
-        startDate: input.startDate, // Update this line
-        endDate: input.endDate, // Update this line
+        startDate: input.startDate,
+        endDate: input.endDate,
         createdAt: input.createdAt ?? today,
         updatedAt: input.updatedAt ?? today,
       });
@@ -97,8 +87,8 @@ export const postRouter = createTRPCRouter({
         hotelDetails: z.string().optional(),
         durationOfStay: z.number().int().min(1).max(14).optional(),
         flightNumber: z.string().optional(),
-        startDate: z.string().optional(), // Add this line
-        endDate: z.string().optional(), // Add this line
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
         updatedAt: z.string().optional(),
       }),
     )
@@ -115,8 +105,8 @@ export const postRouter = createTRPCRouter({
           hotelDetails: input.hotelDetails,
           durationOfStay: input.durationOfStay,
           flightNumber: input.flightNumber,
-          startDate: input.startDate ?? new Date().toISOString(), // Update this line
-          endDate: input.endDate ?? new Date().toISOString(), // Update this line
+          startDate: input.startDate ?? new Date().toISOString(),
+          endDate: input.endDate ?? new Date().toISOString(),
           updatedAt: input.updatedAt ?? new Date().toUTCString(),
         })
         .where(and(eq(trips.id, input.id), eq(trips.userId, userId)));
@@ -146,9 +136,4 @@ export const postRouter = createTRPCRouter({
         );
       }
     }),
-
-  // Example of a protected endpoint returning a secret message
-  getSecretMessage: protectedProcedure.query(() => {
-    return "you can now see this secret message!";
-  }),
 });
