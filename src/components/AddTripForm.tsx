@@ -312,7 +312,13 @@ export function CreateTripForm() {
         />
 
         {/* Submit Button */}
-        <Button type="submit" className="mt-4">
+        <Button
+          type="submit"
+          className="mt-4"
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+        >
           Create Trip
         </Button>
       </form>
