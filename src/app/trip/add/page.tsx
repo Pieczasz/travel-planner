@@ -9,8 +9,8 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 import { useEffect } from "react";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
+
+import AddTripForm from "@/components/AddTripForm";
 const Dashboard = () => {
   const { data: session } = useSession();
   const router = useRouter();
@@ -24,14 +24,8 @@ const Dashboard = () => {
   return (
     <main className="flex min-h-screen w-full bg-gray-100 text-black">
       <MaxWidthWrapper>
-        <h2>Hi! {session?.user?.name}</h2>
-        <Image
-          src={session?.user?.image ?? "/default-profile-image.jpg"}
-          alt="Profile"
-          width={200}
-          height={200}
-        />
-        <Button onClick={() => router.push("/trip/add")}>Add Trip</Button>
+        <h2>Add your trip!</h2>
+        <AddTripForm />
       </MaxWidthWrapper>
     </main>
   );

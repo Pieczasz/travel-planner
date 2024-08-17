@@ -10,7 +10,7 @@ import {
 import { trips } from "@/server/db/schema"; // Adjust the import path as needed
 import { and, eq } from "drizzle-orm";
 
-export const tripRouter = createTRPCRouter({
+export const postRouter = createTRPCRouter({
   // Public endpoint for testing or other non-authenticated use cases
   hello: publicProcedure
     .input(z.object({ text: z.string() }))
