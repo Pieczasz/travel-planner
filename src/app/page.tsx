@@ -12,14 +12,14 @@ import { useRouter } from "next/navigation";
 
 import { useEffect } from "react";
 export default function Home() {
-  const session = useSession();
-
+  const { data: session } = useSession();
   const router = useRouter();
+
   useEffect(() => {
     if (session) {
       router.push("/dashboard");
     }
-  });
+  }, [session, router]);
 
   return (
     <HydrateClient>
