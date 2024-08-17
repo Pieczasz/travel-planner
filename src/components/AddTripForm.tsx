@@ -1,11 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 "use client";
 
-// Imports
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,13 +18,23 @@ import {
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import Select from "react-select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Country, State, City } from "country-state-city";
 import type { ICity, ICountry, IState } from "country-state-city";
+
 // Zod Schema for Form Validation
 const tripFormSchema = z.object({
   name: z.string().min(1, { message: "Name is required." }),
   destination: z.string().min(1, { message: "Destination is required." }),
+  country: z.string().min(1, { message: "Country is required." }),
+  state: z.string().min(1, { message: "State is required." }),
+  city: z.string().min(1, { message: "City is required." }),
   hotelDetails: z.string().optional(),
   dateRange: z.object({
     from: z.date({
@@ -59,6 +63,9 @@ export function CreateTripForm() {
     defaultValues: {
       name: "",
       destination: "",
+      country: "",
+      state: "",
+      city: "",
       hotelDetails: "",
       dateRange: {
         from: new Date(),
@@ -93,15 +100,30 @@ export function CreateTripForm() {
     createTrip.mutate(updatedData);
   }
 
-  const handleCountryChange = (country: ICountry | null) => {
-    setSelectedCountry(country);
+  const handleCountryChange = (value: string) => {
+    const country = Country.getAllCountries().find((c) => c.isoCode === value);
+    setSelectedCountry(country ?? null);
     setSelectedState(null); // Reset state and city
     setSelectedCity(null);
+    form.setValue("country", value); // Update form state
   };
 
-  const handleStateChange = (state: IState | null) => {
-    setSelectedState(state);
+  const handleStateChange = (value: string) => {
+    const state = State.getStatesOfCountry(selectedCountry?.isoCode ?? "").find(
+      (s) => s.isoCode === value,
+    );
+    setSelectedState(state ?? null);
     setSelectedCity(null); // Reset city
+    form.setValue("state", value); // Update form state
+  };
+
+  const handleCityChange = (value: string) => {
+    const city = City.getCitiesOfState(
+      selectedState?.countryCode ?? "",
+      selectedState?.isoCode ?? "",
+    ).find((c) => c.name === value);
+    setSelectedCity(city ?? null);
+    form.setValue("city", value); // Update form state
   };
 
   const countries = Country.getAllCountries();
@@ -140,51 +162,92 @@ export function CreateTripForm() {
         />
 
         {/* Country Selector */}
-        <FormItem>
-          <FormLabel>Country</FormLabel>
-          <FormControl>
-            <Select
-              options={countries}
-              getOptionLabel={(option) => option.name}
-              getOptionValue={(option) => option.isoCode}
-              value={selectedCountry}
-              onChange={handleCountryChange}
-              placeholder="Select a country"
-            />
-          </FormControl>
-        </FormItem>
+        <FormField
+          control={form.control}
+          name="country"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Country</FormLabel>
+              <FormControl>
+                <Select value={field.value} onValueChange={handleCountryChange}>
+                  <SelectTrigger className="w-[280px]">
+                    <SelectValue placeholder="Select a country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {countries.map((country) => (
+                      <SelectItem key={country.isoCode} value={country.isoCode}>
+                        {country.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormControl>
+              <FormMessage>
+                {form.formState.errors.country?.message}
+              </FormMessage>
+            </FormItem>
+          )}
+        />
 
         {/* State Selector */}
-        <FormItem>
-          <FormLabel>State</FormLabel>
-          <FormControl>
-            <Select
-              options={states}
-              getOptionLabel={(option) => option.name}
-              getOptionValue={(option) => option.isoCode}
-              value={selectedState}
-              onChange={handleStateChange}
-              placeholder="Select a state"
-              isDisabled={!selectedCountry}
-            />
-          </FormControl>
-        </FormItem>
+        <FormField
+          control={form.control}
+          name="state"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>State</FormLabel>
+              <FormControl>
+                <Select
+                  value={field.value}
+                  onValueChange={handleStateChange}
+                  disabled={!selectedCountry}
+                >
+                  <SelectTrigger className="w-[280px]">
+                    <SelectValue placeholder="Select a state" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {states.map((state) => (
+                      <SelectItem key={state.isoCode} value={state.isoCode}>
+                        {state.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormControl>
+              <FormMessage>{form.formState.errors.state?.message}</FormMessage>
+            </FormItem>
+          )}
+        />
 
         {/* City Selector */}
-        <FormItem>
-          <FormLabel>City</FormLabel>
-          <FormControl>
-            <Select
-              options={cities}
-              getOptionLabel={(option) => option.name}
-              getOptionValue={(option) => option.name}
-              value={selectedCity}
-              onChange={(city) => setSelectedCity(city)}
-              placeholder="Select a city"
-              isDisabled={!selectedState}
-            />
-          </FormControl>
-        </FormItem>
+        <FormField
+          control={form.control}
+          name="city"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>City</FormLabel>
+              <FormControl>
+                <Select
+                  value={field.value}
+                  onValueChange={handleCityChange}
+                  disabled={!selectedState}
+                >
+                  <SelectTrigger className="w-[280px]">
+                    <SelectValue placeholder="Select a city" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cities.map((city) => (
+                      <SelectItem key={city.name} value={city.name}>
+                        {city.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormControl>
+              <FormMessage>{form.formState.errors.city?.message}</FormMessage>
+            </FormItem>
+          )}
+        />
 
         {/* Date Range Field */}
         <FormField
