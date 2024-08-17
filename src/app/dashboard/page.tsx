@@ -2,6 +2,8 @@
 
 import React from "react";
 
+import { HydrateClient } from "@/trpc/server";
+
 import MaxWidthWrapper from "@/components/MaxWidthWrapper";
 
 import { useSession } from "next-auth/react";
@@ -20,11 +22,13 @@ const Page = () => {
   }, [session, router]);
 
   return (
-    <main className="flex min-h-screen w-full bg-gray-100 text-black">
-      <MaxWidthWrapper>
-        <p>asd</p>
-      </MaxWidthWrapper>
-    </main>
+    <HydrateClient>
+      <main className="flex min-h-screen w-full bg-gray-100 text-black">
+        <MaxWidthWrapper>
+          <p>asd</p>
+        </MaxWidthWrapper>
+      </main>
+    </HydrateClient>
   );
 };
 
