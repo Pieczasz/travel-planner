@@ -14,7 +14,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 
 // TRPC
-import { api } from "@/trpc/server";
+import { api } from "@/trpc/react";
 
 interface Trip {
   id: string;
@@ -29,10 +29,9 @@ console.log(api);
 const Dashboard = () => {
   const { data: session } = useSession();
   const router = useRouter();
-
-  // Fetch trips using tRPC
   const { data: trips, isLoading, error } = api.post.getAll.useQuery();
 
+  console.log(api);
   useEffect(() => {
     if (!session) {
       router.push("/");
@@ -53,17 +52,17 @@ const Dashboard = () => {
         <h2>Hi! {session?.user?.name}</h2>
         <Image
           src={session?.user?.image ?? "/default-profile-image.jpg"}
-          alt="Profile"
-          width={200}
-          height={200}
+          alt="avatar"
+          width={50}
+          height={50}
         />
         <Button onClick={() => router.push("/trip/add")}>Add Trip</Button>
 
         <div className="mt-6">
-          {trips.length === 0 ? (
+          {trips!.length === 0 ? (
             <p>No trips found.</p>
           ) : (
-            trips.map((trip: Trip) => (
+            trips!.map((trip: Trip) => (
               <div
                 key={trip.id}
                 className="mb-4 rounded bg-white p-4 shadow-md"
