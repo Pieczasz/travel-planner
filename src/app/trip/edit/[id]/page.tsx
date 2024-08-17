@@ -1,117 +1,97 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 "use client";
-
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { format } from "date-fns";
-
-// Components
+import { api } from "@/trpc/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-  FormDescription,
-} from "@/components/ui/form";
-import { DatePickerWithRange } from "@/components/ui/DatePickerWithRange";
+import { useForm, Controller } from "react-hook-form";
 
-// TRPC
-import { api } from "@/trpc/react";
+// Define types for Trip and Day
+interface Day {
+  id: string;
+  dayNumber: number;
+  whatToDo: string;
+  budget: string;
+  notes: string;
+}
 
-// Country-State-City data
-import { Country, State, City } from "country-state-city";
-import type { ICity, ICountry, IState } from "country-state-city";
-
-// Zod Schema for Form Validation
-const tripFormSchema = z.object({
-  name: z.string().min(1, { message: "Name is required." }),
-  country: z.string().min(1, { message: "Country is required." }),
-  state: z.string().min(1, { message: "State is required." }),
-  city: z.string().min(1, { message: "City is required." }),
-  hotelDetails: z.string().optional(),
-  dateRange: z.object({
-    from: z.date({
-      required_error: "Start date is required.",
-    }),
-    to: z
-      .date({
-        required_error: "End date is required.",
-      })
-      .refine((val) => val > new Date(), {
-        message: "End date must be after start date.",
-      }),
-  }),
-  flightNumber: z.string().optional(),
-});
+interface Trip {
+  id: string;
+  userId: string;
+  name: string;
+  country: string;
+  state: string;
+  city: string;
+  hotelDetails: string | null;
+  durationOfStay: number;
+  flightNumber: string | null;
+  startDate: string;
+  endDate: string;
+  createdAt: string;
+  updatedAt: string;
+  days: Day[];
+}
 
 export default function EditTrip() {
+  // Check if params.slug is an array before joining
   const { id } = useParams<{ id: string }>();
+
   const router = useRouter();
 
-  const { data: trip, isLoading, error } = api.post.getById.useQuery({ id });
-  const { control, handleSubmit, setValue, getValues } = useForm<
-    z.infer<typeof tripFormSchema>
-  >({
-    resolver: zodResolver(tripFormSchema),
+  const {
+    data: trip,
+    isLoading,
+    error,
+  } = api.post.getById.useQuery({
+    id,
+  });
+
+  const { control, handleSubmit, setValue, getValues } = useForm<Trip>({
     defaultValues: {
       name: "",
       country: "",
       state: "",
       city: "",
       hotelDetails: "",
-      dateRange: {
-        from: new Date(),
-        to: new Date(),
-      },
+      durationOfStay: 0,
       flightNumber: "",
+      startDate: "",
+      endDate: "",
+      days: [],
     },
   });
 
   useEffect(() => {
-    if (trip && trip.length > 0) {
-      const firstTrip = trip[0];
-      setValue("name", firstTrip!.name);
-      setValue("country", firstTrip!.country);
-      setValue("state", firstTrip!.state);
-      setValue("city", firstTrip!.city);
-      setValue("hotelDetails", firstTrip!.hotelDetails ?? "");
-      setValue("dateRange", {
-        from: new Date(firstTrip!.startDate),
-        to: new Date(firstTrip!.endDate),
+    if (trip) {
+      // Set form values with fetched trip data
+      Object.keys(trip).forEach((key) => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        setValue(key as keyof Trip, trip[key as keyof Trip]);
       });
-      setValue("flightNumber", firstTrip!.flightNumber ?? "");
     }
   }, [trip, setValue]);
 
-  const handleSave = async (formData: z.infer<typeof tripFormSchema>) => {
+  const handleSave = async (formData: Trip) => {
     try {
-      const updatedData = {
-        ...formData,
-        startDate: format(formData.dateRange.from, "yyyy-MM-dd"),
-        endDate: format(formData.dateRange.to, "yyyy-MM-dd"),
-        durationOfStay: Math.ceil(
-          (formData.dateRange.to.getTime() -
-            formData.dateRange.from.getTime()) /
-            (1000 * 60 * 60 * 24),
-        ),
-      };
-
-      await api.post.update.mutate({ id, ...updatedData });
+      await api.post.update.mutate({
+        id: formData.id,
+        name: formData.name,
+        country: formData.country,
+        state: formData.state,
+        city: formData.city,
+        hotelDetails: formData.hotelDetails,
+        durationOfStay: formData.durationOfStay,
+        flightNumber: formData.flightNumber,
+        startDate: formData.startDate,
+        endDate: formData.endDate,
+        days: formData.days.map((day) => ({
+          id: day.id,
+          dayNumber: day.dayNumber,
+          whatToDo: day.whatToDo,
+          budget: day.budget,
+          notes: day.notes,
+        })),
+      });
       router.push("/dashboard");
     } catch (error) {
       console.error("Error saving trip:", error);
@@ -121,211 +101,134 @@ export default function EditTrip() {
   if (isLoading) return <p>Loading...</p>;
   if (error) return <p>Error loading trip: {error.message}</p>;
 
-  const countries = Country.getAllCountries();
-  const states = getValues("country")
-    ? State.getStatesOfCountry(getValues("country"))
-    : [];
-  const cities = getValues("state")
-    ? City.getCitiesOfState(getValues("state"), getValues("country"))
-    : [];
-
   return (
-    <Form {...control}>
-      <form
-        onSubmit={handleSubmit(handleSave)}
-        className="my-10 flex w-full flex-col items-start justify-center gap-y-5"
-      >
-        <h1 className="mb-5 text-center text-2xl font-bold">Edit Trip</h1>
-
-        {/* Name Field */}
-        <FormField
-          control={control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Name</FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  placeholder="Enter trip name"
-                  className="w-full"
+    <div className="p-4">
+      <h1>Edit Trip</h1>
+      <form onSubmit={handleSubmit(handleSave)}>
+        <div>
+          <label>Trip Name</label>
+          <Controller
+            name="name"
+            control={control}
+            render={({ field }) => (
+              <Input {...field} placeholder="Enter trip name" />
+            )}
+          />
+        </div>
+        <div>
+          <label>Country</label>
+          <Controller
+            name="country"
+            control={control}
+            render={({ field }) => (
+              <Input {...field} placeholder="Enter country" />
+            )}
+          />
+        </div>
+        <div>
+          <label>State</label>
+          <Controller
+            name="state"
+            control={control}
+            render={({ field }) => (
+              <Input {...field} placeholder="Enter state" />
+            )}
+          />
+        </div>
+        <div>
+          <label>City</label>
+          <Controller
+            name="city"
+            control={control}
+            render={({ field }) => (
+              <Input {...field} placeholder="Enter city" />
+            )}
+          />
+        </div>
+        <div>
+          <label>Hotel Details</label>
+          <Controller
+            name="hotelDetails"
+            control={control}
+            render={({ field }) => (
+              <Input {...field} placeholder="Enter hotel details" />
+            )}
+          />
+        </div>
+        <div>
+          <label>Duration of Stay (days)</label>
+          <Controller
+            name="durationOfStay"
+            control={control}
+            render={({ field }) => <Input type="number" {...field} />}
+          />
+        </div>
+        <div>
+          <label>Flight Number</label>
+          <Controller
+            name="flightNumber"
+            control={control}
+            render={({ field }) => (
+              <Input {...field} placeholder="Enter flight number" type="text" />
+            )}
+          />
+        </div>
+        <div>
+          <label>Start Date</label>
+          <Controller
+            name="startDate"
+            control={control}
+            render={({ field }) => <Input type="date" {...field} />}
+          />
+        </div>
+        <div>
+          <label>End Date</label>
+          <Controller
+            name="endDate"
+            control={control}
+            render={({ field }) => <Input type="date" {...field} />}
+          />
+        </div>
+        <div>
+          <h2>Daily Plans</h2>
+          {getValues("days").map((day: Day, index: number) => (
+            <div key={day.id} className="mb-4">
+              <h3>Day {index + 1}</h3>
+              <div>
+                <label>What to Do</label>
+                <Controller
+                  name={`days.${index}.whatToDo`}
+                  control={control}
+                  render={({ field }) => (
+                    <Input {...field} placeholder="What to do" />
+                  )}
                 />
-              </FormControl>
-              <FormMessage>
-                {control._formState.errors.name?.message}
-              </FormMessage>
-            </FormItem>
-          )}
-        />
-
-        {/* Country Selector */}
-        <FormField
-          control={control}
-          name="country"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Country</FormLabel>
-              <Select
-                onValueChange={(value) => {
-                  field.onChange(value);
-                  setValue("state", ""); // Reset state and city when country changes
-                  setValue("city", "");
-                }}
-                value={field.value}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select country" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {countries.map((country) => (
-                      <SelectItem key={country.isoCode} value={country.isoCode}>
-                        {country.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </FormControl>
-              </Select>
-              <FormMessage>
-                {control._formState.errors.country?.message}
-              </FormMessage>
-            </FormItem>
-          )}
-        />
-
-        {/* State Selector */}
-        <FormField
-          control={control}
-          name="state"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>State</FormLabel>
-              <Select
-                onValueChange={(value) => {
-                  field.onChange(value);
-                  setValue("city", ""); // Reset city when state changes
-                }}
-                value={field.value}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select state" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {states.map((state) => (
-                      <SelectItem key={state.isoCode} value={state.isoCode}>
-                        {state.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </FormControl>
-              </Select>
-              <FormMessage>
-                {control._formState.errors.state?.message}
-              </FormMessage>
-            </FormItem>
-          )}
-        />
-
-        {/* City Selector */}
-        <FormField
-          control={control}
-          name="city"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>City</FormLabel>
-              <Select {...field} value={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select city" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {cities.map((city) => (
-                      <SelectItem key={city.name} value={city.name}>
-                        {city.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </FormControl>
-              </Select>
-              <FormMessage>
-                {control._formState.errors.city?.message}
-              </FormMessage>
-            </FormItem>
-          )}
-        />
-
-        {/* Hotel Details */}
-        <FormField
-          control={control}
-          name="hotelDetails"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Hotel Details</FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  placeholder="Enter hotel details"
-                  className="w-full"
+              </div>
+              <div>
+                <label>Budget</label>
+                <Controller
+                  name={`days.${index}.budget`}
+                  control={control}
+                  render={({ field }) => (
+                    <Input {...field} placeholder="Budget" />
+                  )}
                 />
-              </FormControl>
-              <FormMessage>
-                {control._formState.errors.hotelDetails?.message}
-              </FormMessage>
-            </FormItem>
-          )}
-        />
-
-        {/* Date Range */}
-        <FormField
-          control={control}
-          name="dateRange"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Date Range</FormLabel>
-              <Controller
-                name="dateRange"
-                control={control}
-                render={({ field: { onChange, value } }) => (
-                  <DatePickerWithRange
-                    onChange={(dates) => {
-                      onChange(dates);
-                    }}
-                    value={value}
-                  />
-                )}
-              />
-              <FormMessage>
-                {control._formState.errors.dateRange?.message}
-              </FormMessage>
-            </FormItem>
-          )}
-        />
-
-        {/* Flight Number */}
-        <FormField
-          control={control}
-          name="flightNumber"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Flight Number</FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  placeholder="Enter flight number"
-                  className="w-full"
+              </div>
+              <div>
+                <label>Notes</label>
+                <Controller
+                  name={`days.${index}.notes`}
+                  control={control}
+                  render={({ field }) => (
+                    <textarea {...field} placeholder="Notes" />
+                  )}
                 />
-              </FormControl>
-              <FormMessage>
-                {control._formState.errors.flightNumber?.message}
-              </FormMessage>
-            </FormItem>
-          )}
-        />
-
-        {/* Submit Button */}
+              </div>
+            </div>
+          ))}
+        </div>
         <Button type="submit">Save Changes</Button>
       </form>
-    </Form>
+    </div>
   );
 }
