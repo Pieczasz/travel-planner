@@ -6,7 +6,7 @@ import { SessionProvider } from "next-auth/react";
 
 // Types
 
-import { FC } from "react";
+import type { FC } from "react";
 
 // Interfaces
 
