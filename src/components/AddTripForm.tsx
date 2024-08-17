@@ -27,11 +27,13 @@ import {
 } from "@/components/ui/select";
 import { Country, State, City } from "country-state-city";
 import type { ICity, ICountry, IState } from "country-state-city";
+import { format } from "date-fns";
+
+// ...
 
 // Zod Schema for Form Validation
 const tripFormSchema = z.object({
   name: z.string().min(1, { message: "Name is required." }),
-  destination: z.string().min(1, { message: "Destination is required." }),
   country: z.string().min(1, { message: "Country is required." }),
   state: z.string().min(1, { message: "State is required." }),
   city: z.string().min(1, { message: "City is required." }),
@@ -62,7 +64,6 @@ export function CreateTripForm() {
     resolver: zodResolver(tripFormSchema),
     defaultValues: {
       name: "",
-      destination: "",
       country: "",
       state: "",
       city: "",
@@ -90,13 +91,13 @@ export function CreateTripForm() {
     const { dateRange, ...rest } = data;
     const updatedData = {
       ...rest,
-      destination: selectedCity?.name ?? "",
+      startDate: format(dateRange.from, "dd-MM-yyyy"), // assuming you want to format the date as YYYY-MM-DD
+      endDate: format(dateRange.to, "dd-MM-yyyy"), // assuming you want to format the date as YYYY-MM-DD
       durationOfStay: Math.ceil(
         (dateRange.to.getTime() - dateRange.from.getTime()) /
           (1000 * 60 * 60 * 24),
       ),
     };
-    console.log("Updated data:", updatedData); // Debugging statement
     createTrip.mutate(updatedData);
   }
 

@@ -92,10 +92,14 @@ export const trips = sqliteTable("trips", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }), // Foreign key to Users
   name: text("name").notNull(), // Trip Name
-  destination: text("destination").notNull(),
+  country: text("country").notNull(), // Country
+  state: text("state").notNull(), // State
+  city: text("city").notNull(), // City
   hotelDetails: text("hotelDetails"),
   durationOfStay: integer("durationOfStay").notNull(), // Duration in days (1-14)
   flightNumber: text("flightNumber"),
+  startDate: text("startDate").notNull(), // Start date in dd.mm.yyyy format
+  endDate: text("endDate").notNull(), // End date in dd.mm.yyyy format
   createdAt: text("createdAt").notNull(),
   updatedAt: text("updatedAt").notNull(),
 });
