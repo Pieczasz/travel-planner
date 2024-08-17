@@ -15,8 +15,8 @@ const Dashboard = () => {
   const router = useRouter();
 
   useEffect(() => {
-    if (session) {
-      router.push("/dashboard");
+    if (!session) {
+      router.push("/");
     }
   }, [session, router]);
 
