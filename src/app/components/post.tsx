@@ -5,6 +5,7 @@ import { useState } from "react";
 import { api } from "@/trpc/react";
 
 export function LatestPost() {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const [latestPost] = api.post.getLatest.useSuspenseQuery();
 
   const utils = api.useUtils();
@@ -19,6 +20,7 @@ export function LatestPost() {
   return (
     <div className="w-full max-w-xs">
       {latestPost ? (
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         <p className="truncate">Your most recent post: {latestPost.name}</p>
       ) : (
         <p>You have no posts yet.</p>
