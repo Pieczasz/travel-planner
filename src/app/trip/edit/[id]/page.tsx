@@ -22,28 +22,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Country, State, City } from "country-state-city";
-import type { ICity, ICountry, IState } from "country-state-city";
+import type { ICountry, IState } from "country-state-city";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
-import { DateRange } from "react-day-picker";
+import type { DateRange } from "react-day-picker";
 import MaxWidthWrapper from "@/components/MaxWidthWrapper";
-
-interface Trip {
-  name: string;
-  country: string;
-  state: string;
-  city: string;
-  hotelDetails: string | null;
-  flightNumber: string | null;
-  durationOfStay: number;
-  startDate: string;
-  endDate: string;
-  createdAt: string;
-  updatedAt: string;
-  id: string;
-  userId: string;
-}
 
 // Zod Schema for Form Validation
 const tripFormSchema = z.object({
@@ -94,7 +78,6 @@ export default function EditTrip() {
 
   const [selectedCountry, setSelectedCountry] = useState<ICountry | null>(null);
   const [selectedState, setSelectedState] = useState<IState | null>(null);
-  const [selectedCity, setSelectedCity] = useState<ICity | null>(null);
 
   useEffect(() => {
     if (trip && trip.length > 0) {
@@ -125,15 +108,9 @@ export default function EditTrip() {
             (s) => s.isoCode === state,
           )
         : null;
-      const cityData = stateData
-        ? City.getCitiesOfState(stateData.countryCode, stateData.isoCode).find(
-            (c) => c.name === city,
-          )
-        : null;
 
       setSelectedCountry(countryData ?? null);
       setSelectedState(stateData ?? null);
-      setSelectedCity(cityData ?? null);
     }
   }, [trip, form]);
 
@@ -141,7 +118,6 @@ export default function EditTrip() {
     const country = Country.getAllCountries().find((c) => c.isoCode === value);
     setSelectedCountry(country ?? null);
     setSelectedState(null); // Reset state and city
-    setSelectedCity(null);
     form.setValue("country", value);
   };
 
@@ -152,18 +128,10 @@ export default function EditTrip() {
         )
       : null;
     setSelectedState(state ?? null);
-    setSelectedCity(null); // Reset city
     form.setValue("state", value);
   };
 
   const handleCityChange = (value: string) => {
-    const city = selectedState
-      ? City.getCitiesOfState(
-          selectedState.countryCode,
-          selectedState.isoCode,
-        ).find((c) => c.name === value)
-      : null;
-    setSelectedCity(city ?? null);
     form.setValue("city", value);
   };
 

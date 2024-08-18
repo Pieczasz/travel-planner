@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Country, State, City } from "country-state-city";
-import type { ICity, ICountry, IState } from "country-state-city";
+import type { ICountry, IState } from "country-state-city";
 
 // ZOD
 
@@ -65,7 +65,6 @@ const tripFormSchema = z.object({
 export function CreateTripForm() {
   const [selectedCountry, setSelectedCountry] = useState<ICountry | null>(null);
   const [selectedState, setSelectedState] = useState<IState | null>(null);
-  const [selectedCity, setSelectedCity] = useState<ICity | null>(null);
 
   const router = useRouter();
 
@@ -113,7 +112,7 @@ export function CreateTripForm() {
     const country = Country.getAllCountries().find((c) => c.isoCode === value);
     setSelectedCountry(country ?? null);
     setSelectedState(null); // Reset state and city
-    setSelectedCity(null);
+
     form.setValue("country", value); // Update form state
   };
 
@@ -122,16 +121,11 @@ export function CreateTripForm() {
       (s) => s.isoCode === value,
     );
     setSelectedState(state ?? null);
-    setSelectedCity(null); // Reset city
+
     form.setValue("state", value); // Update form state
   };
 
   const handleCityChange = (value: string) => {
-    const city = City.getCitiesOfState(
-      selectedState?.countryCode ?? "",
-      selectedState?.isoCode ?? "",
-    ).find((c) => c.name === value);
-    setSelectedCity(city ?? null);
     form.setValue("city", value); // Update form state
   };
 
