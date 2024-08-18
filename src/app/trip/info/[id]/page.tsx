@@ -7,17 +7,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { api } from "@/trpc/react";
 import WeatherCard from "@/components/WeatherCard";
-import {
-  AlertDialog,
-  AlertDialogTrigger,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogAction,
-  AlertDialogCancel,
-} from "@/components/ui/alert-dialog";
+import * as AlertDialog from "@radix-ui/react-alert-dialog";
 
 interface Trip {
   endDate: string;
@@ -61,6 +51,15 @@ const Info = () => {
   const { data: tripDays, isLoading: isLoadingDays } =
     api.post.getTripDaysById.useQuery({ tripId: id });
 
+  const { mutate: deleteTrip } = api.post.delete.useMutation({
+    onSuccess: () => {
+      router.push("/"); // Redirect to another page after deletion
+    },
+    onError: (error) => {
+      console.error("Error deleting trip:", error);
+    },
+  });
+
   useEffect(() => {
     if (!session) {
       router.push("/");
@@ -69,7 +68,6 @@ const Info = () => {
 
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [errorWeather, setErrorWeather] = useState<string | null>(null);
-  const [open, setOpen] = useState(false);
 
   const apiKey = "19f10437487be9120c1af687fe4c9c74";
 
@@ -84,12 +82,15 @@ const Info = () => {
           if (!response.ok) {
             throw new Error("Network response was not ok");
           }
+          /* eslint-disable  @typescript-eslint/no-explicit-any */
           const data = await response.json();
+
           setWeatherData(data);
           setErrorWeather(null);
         } catch (error) {
           setErrorWeather((error as Error).message);
           setWeatherData(null);
+          console.log(errorWeather);
         }
       };
 
@@ -97,21 +98,10 @@ const Info = () => {
         console.error("Error fetching weather data:", error);
       });
     }
-  }, [trip, apiKey]);
+  }, [trip, apiKey, errorWeather]);
 
-  const handleDelete = async () => {
-    try {
-      await api.post.delete.useMutation({
-        onSuccess: () => {
-          router.push("/");
-        },
-        onError: (error) => {
-          console.error("Error deleting trip:", error);
-        },
-      });
-    } catch (error) {
-      console.error("Error deleting trip:", error);
-    }
+  const handleDelete = () => {
+    deleteTrip({ id });
   };
 
   if (isLoading || isLoadingDays) {
@@ -183,37 +173,35 @@ const Info = () => {
                   >
                     Edit Trip
                   </Button>
-                  <AlertDialog open={open} onOpenChange={setOpen}>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        onClick={() => setOpen(true)}
-                        className="mt-2"
-                        variant={"destructive"}
-                      >
+                  <AlertDialog.Root>
+                    <AlertDialog.Trigger asChild>
+                      <Button className="mt-2" variant={"destructive"}>
                         Delete Trip
                       </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Trip</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete this trip? This action
-                          cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => {
-                            handleDelete();
-                            setOpen(false);
-                          }}
+                    </AlertDialog.Trigger>
+                    <AlertDialog.Overlay className="alert-dialog fixed z-50 bg-black/30" />
+                    <AlertDialog.Content className="alert-dialog fixed left-[50%] top-[50%] z-50 translate-x-[-50%] translate-y-[-50%] rounded-md bg-white p-6 shadow-lg">
+                      <AlertDialog.Title className="text-lg font-bold">
+                        Are you absolutely sure?
+                      </AlertDialog.Title>
+                      <AlertDialog.Description className="mt-2">
+                        This action cannot be undone. This will permanently
+                        delete the trip and remove it from our records.
+                      </AlertDialog.Description>
+                      <div className="mt-4 flex justify-end gap-x-4">
+                        <AlertDialog.Cancel asChild className="rounded-md">
+                          <Button variant={"outline"}>Cancel</Button>
+                        </AlertDialog.Cancel>
+                        <AlertDialog.Action
+                          asChild
+                          className="rounded-md bg-red-600 p-2 text-white hover:bg-red-700"
+                          onClick={handleDelete}
                         >
-                          Confirm
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                          <Button>Delete</Button>
+                        </AlertDialog.Action>
+                      </div>
+                    </AlertDialog.Content>
+                  </AlertDialog.Root>
                 </div>
               </div>
               <div className="mt-8 md:mt-0">
@@ -238,42 +226,31 @@ const Info = () => {
               Trip Itinerary
             </h2>
             {tripDays.map((day: TripDay) => (
-              <div
-                className="mb-4 rounded border bg-white p-4 shadow-md"
-                key={day.id}
-              >
-                <h4 className="font-bold">Day {day.dayNumber}</h4>
-                <p>
-                  <span className="font-bold">What to Do:</span> {day.whatToDo}
-                </p>
-                {day.budget && (
-                  <p>
-                    <span className="font-bold">Budget:</span> {day.budget}
-                  </p>
-                )}
-                {day.notes && (
-                  <p>
-                    <span className="font-bold">Notes:</span> {day.notes}
-                  </p>
-                )}
+              <div key={day.id} className="mb-4 rounded bg-white p-4 shadow-md">
+                <h3 className="font-bold">Day {day.dayNumber}</h3>
+                <p>What to do: {day.whatToDo}</p>
+                {day.budget && <p>Budget: {day.budget}</p>}
+                {day.notes && <p>Notes: {day.notes}</p>}
               </div>
             ))}
           </div>
         )}
-
-        {weatherData && (
-          <div className="mt-8 w-full">
-            <h2 className="mb-6 text-center text-xl font-bold">
-              Weather Forecast
-            </h2>
+        <div className="weather-card flex w-full flex-col items-center justify-center pt-8">
+          {weatherData && (
             <WeatherCard
               city={trip[0]!.city}
               temperature={weatherData.main.temp}
               humidity={weatherData.main.humidity}
               windSpeed={weatherData.wind.speed}
             />
-          </div>
-        )}
+          )}
+
+          {errorWeather && (
+            <div className="mt-4 text-black">
+              No weather data found for {trip[0]!.city}
+            </div>
+          )}
+        </div>
       </MaxWidthWrapper>
     </main>
   );

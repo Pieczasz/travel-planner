@@ -320,7 +320,7 @@ export default function AddTripForm() {
 
           {/* Submit Button */}
           <Button type="submit" className="mt-6">
-            Create Trip
+            Create a Trip
           </Button>
         </MaxWidthWrapper>
       </form>
