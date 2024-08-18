@@ -14,12 +14,12 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
   windSpeed,
 }) => {
   return (
-    <div className="flex justify-center">
+    <div className="z-10 flex justify-center">
       <div className="min-w-sm w-full max-w-sm rounded-md bg-blue-200 text-black shadow-lg transition-shadow hover:shadow-xl">
         <h2 className="text-md mb-2 px-4 pt-4">
           <div className="flex justify-between">
             <div className="badge relative top-0">
-              <span className="h-12px text-md w-12px bottom-1 right-1 mt-2 rounded px-4 py-1 font-semibold">
+              <span className="h-12px text-md w-12px bottom-1 right-1 z-10 mt-2 rounded px-4 py-1 font-semibold">
                 {city}
               </span>
             </div>

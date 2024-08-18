@@ -177,8 +177,8 @@ const Info = () => {
                         Delete Trip
                       </Button>
                     </AlertDialog.Trigger>
-                    <AlertDialog.Overlay className="fixed inset-0 bg-black/30" />
-                    <AlertDialog.Content className="fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] rounded-md bg-white p-6 shadow-lg">
+                    <AlertDialog.Overlay className="alert-dialog fixed z-50 bg-black/30" />
+                    <AlertDialog.Content className="alert-dialog fixed left-[50%] top-[50%] z-50 translate-x-[-50%] translate-y-[-50%] rounded-md bg-white p-6 shadow-lg">
                       <AlertDialog.Title className="text-lg font-bold">
                         Are you absolutely sure?
                       </AlertDialog.Title>
@@ -233,7 +233,7 @@ const Info = () => {
             ))}
           </div>
         )}
-        <div className="flex w-full flex-col items-center justify-center pt-8">
+        <div className="weather-card flex w-full flex-col items-center justify-center pt-8">
           {weatherData && (
             <WeatherCard
               city={trip[0]!.city}
