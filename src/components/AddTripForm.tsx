@@ -2,7 +2,6 @@
 
 // Functions
 import React, { useState } from "react";
-
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 
@@ -14,7 +13,6 @@ import {
   FormField,
   FormItem,
   FormLabel,
-  FormDescription,
   FormMessage,
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
@@ -30,7 +28,6 @@ import { Country, State, City } from "country-state-city";
 import type { ICountry, IState } from "country-state-city";
 
 // ZOD
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
@@ -39,6 +36,7 @@ import { api } from "@/trpc/react";
 
 // Date formater
 import { format } from "date-fns";
+import MaxWidthWrapper from "./MaxWidthWrapper";
 
 // Zod Schema for Form Validation
 const tripFormSchema = z.object({
@@ -62,7 +60,7 @@ const tripFormSchema = z.object({
   flightNumber: z.string().optional(),
 });
 
-export function CreateTripForm() {
+export default function AddTripForm() {
   const [selectedCountry, setSelectedCountry] = useState<ICountry | null>(null);
   const [selectedState, setSelectedState] = useState<IState | null>(null);
 
@@ -143,188 +141,189 @@ export function CreateTripForm() {
         onSubmit={form.handleSubmit(onSubmit)}
         className="my-10 flex w-full flex-col items-start justify-center gap-y-5"
       >
-        {/* Name Field */}
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Name</FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  placeholder="Enter trip name"
-                  className="w-full"
-                />
-              </FormControl>
-              <FormMessage>{form.formState.errors.name?.message}</FormMessage>
-            </FormItem>
-          )}
-        />
+        <MaxWidthWrapper>
+          <h1 className="text-center font-extrabold">Create Trip</h1>
 
-        {/* Country Selector */}
-        <FormField
-          control={form.control}
-          name="country"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Country</FormLabel>
-              <FormControl>
-                <Select value={field.value} onValueChange={handleCountryChange}>
-                  <SelectTrigger className="w-[280px]">
-                    <SelectValue placeholder="Select a country" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {countries.map((country) => (
-                      <SelectItem key={country.isoCode} value={country.isoCode}>
-                        {country.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FormControl>
-              <FormMessage>
-                {form.formState.errors.country?.message}
-              </FormMessage>
-            </FormItem>
-          )}
-        />
+          {/* Name Field */}
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    placeholder="Enter trip name"
+                    className="w-full"
+                  />
+                </FormControl>
+                <FormMessage>{form.formState.errors.name?.message}</FormMessage>
+              </FormItem>
+            )}
+          />
 
-        {/* State Selector */}
-        <FormField
-          control={form.control}
-          name="state"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>State</FormLabel>
-              <FormControl>
-                <Select
+          {/* Country Selector */}
+          <FormField
+            control={form.control}
+            name="country"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Country</FormLabel>
+                <FormControl>
+                  <Select
+                    value={field.value}
+                    onValueChange={handleCountryChange}
+                  >
+                    <SelectTrigger className="w-[280px]">
+                      <SelectValue placeholder="Select a country" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {countries.map((country) => (
+                        <SelectItem
+                          key={country.isoCode}
+                          value={country.isoCode}
+                        >
+                          {country.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage>
+                  {form.formState.errors.country?.message}
+                </FormMessage>
+              </FormItem>
+            )}
+          />
+
+          {/* State Selector */}
+          <FormField
+            control={form.control}
+            name="state"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>State</FormLabel>
+                <FormControl>
+                  <Select
+                    value={field.value}
+                    onValueChange={handleStateChange}
+                    disabled={!selectedCountry}
+                  >
+                    <SelectTrigger className="w-[280px]">
+                      <SelectValue placeholder="Select a state" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {states.map((state) => (
+                        <SelectItem key={state.isoCode} value={state.isoCode}>
+                          {state.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage>
+                  {form.formState.errors.state?.message}
+                </FormMessage>
+              </FormItem>
+            )}
+          />
+
+          {/* City Selector */}
+          <FormField
+            control={form.control}
+            name="city"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>City</FormLabel>
+                <FormControl>
+                  <Select
+                    value={field.value}
+                    onValueChange={handleCityChange}
+                    disabled={!selectedState}
+                  >
+                    <SelectTrigger className="w-[280px]">
+                      <SelectValue placeholder="Select a city" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cities.map((city) => (
+                        <SelectItem key={city.name} value={city.name}>
+                          {city.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage>{form.formState.errors.city?.message}</FormMessage>
+              </FormItem>
+            )}
+          />
+
+          {/* Date Range Field */}
+          <FormField
+            control={form.control}
+            name="dateRange"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Date Range</FormLabel>
+                <DatePickerWithRange
+                  className="w-[300px]"
+                  onChange={(dateRange) => field.onChange(dateRange)}
                   value={field.value}
-                  onValueChange={handleStateChange}
-                  disabled={!selectedCountry}
-                >
-                  <SelectTrigger className="w-[280px]">
-                    <SelectValue placeholder="Select a state" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {states.map((state) => (
-                      <SelectItem key={state.isoCode} value={state.isoCode}>
-                        {state.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FormControl>
-              <FormMessage>{form.formState.errors.state?.message}</FormMessage>
-            </FormItem>
-          )}
-        />
-
-        {/* City Selector */}
-        <FormField
-          control={form.control}
-          name="city"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>City</FormLabel>
-              <FormControl>
-                <Select
-                  value={field.value}
-                  onValueChange={handleCityChange}
-                  disabled={!selectedState}
-                >
-                  <SelectTrigger className="w-[280px]">
-                    <SelectValue placeholder="Select a city" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {cities.map((city) => (
-                      <SelectItem key={city.name} value={city.name}>
-                        {city.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FormControl>
-              <FormMessage>{form.formState.errors.city?.message}</FormMessage>
-            </FormItem>
-          )}
-        />
-
-        {/* Date Range Field */}
-        <FormField
-          control={form.control}
-          name="dateRange"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Date Range</FormLabel>
-              <DatePickerWithRange
-                className="w-[300px]"
-                onChange={(dateRange) => field.onChange(dateRange)}
-                value={field.value}
-              />
-              <FormDescription>
-                Choose the date range for your trip.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Hotel Details Field */}
-        <FormField
-          control={form.control}
-          name="hotelDetails"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Hotel Details</FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  placeholder="Enter hotel details"
-                  className="w-full"
                 />
-              </FormControl>
-              <FormMessage>
-                {form.formState.errors.hotelDetails?.message}
-              </FormMessage>
-            </FormItem>
-          )}
-        />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        {/* Flight Number Field */}
-        <FormField
-          control={form.control}
-          name="flightNumber"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Flight Number</FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  placeholder="Enter flight number"
-                  className="w-full"
-                />
-              </FormControl>
-              <FormMessage>
-                {form.formState.errors.flightNumber?.message}
-              </FormMessage>
-            </FormItem>
-          )}
-        />
+          {/* Hotel Details Field */}
+          <FormField
+            control={form.control}
+            name="hotelDetails"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Hotel Details</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    placeholder="Enter hotel details"
+                    className="w-full"
+                  />
+                </FormControl>
+                <FormMessage>
+                  {form.formState.errors.hotelDetails?.message}
+                </FormMessage>
+              </FormItem>
+            )}
+          />
 
-        {/* Submit Button */}
-        <Button
-          type="submit"
-          className="mt-4"
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-        >
-          Create Trip
-        </Button>
+          {/* Flight Number Field */}
+          <FormField
+            control={form.control}
+            name="flightNumber"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Flight Number</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    placeholder="Enter flight number"
+                    className="w-full"
+                  />
+                </FormControl>
+                <FormMessage>
+                  {form.formState.errors.flightNumber?.message}
+                </FormMessage>
+              </FormItem>
+            )}
+          />
+
+          {/* Submit Button */}
+          <Button type="submit" className="mt-6">
+            Create Trip
+          </Button>
+        </MaxWidthWrapper>
       </form>
     </Form>
   );
 }
-
-export default CreateTripForm;

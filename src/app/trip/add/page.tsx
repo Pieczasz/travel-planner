@@ -24,7 +24,6 @@ const AddTrip = () => {
   return (
     <main className="flex min-h-screen w-full bg-gray-100 text-black">
       <MaxWidthWrapper className="mt-20 flex flex-col items-center justify-center">
-        <h2>Add your trip!</h2>
         <AddTripForm />
       </MaxWidthWrapper>
     </main>

@@ -16,6 +16,9 @@ import { Button } from "@/components/ui/button";
 // TRPC
 import { api } from "@/trpc/react";
 
+// Icons
+import { FiLogOut } from "react-icons/fi";
+
 interface Trip {
   endDate: string;
   startDate: string;
@@ -29,12 +32,10 @@ interface Trip {
   durationOfStay: number;
 }
 
-
 const Dashboard = () => {
   const { data: session } = useSession();
   const router = useRouter();
   const { data: trips, isLoading, error } = api.post.getAll.useQuery();
-
 
   useEffect(() => {
     if (!session) {
@@ -53,65 +54,60 @@ const Dashboard = () => {
   return (
     <main className="flex min-h-screen w-full bg-gray-100 text-black">
       <MaxWidthWrapper className="flex flex-col items-center">
-        <div className="flex items-center justify-center space-x-4">
-          <h2 className="mt-20 text-center">
-            Welcome! {session?.user?.name?.toLocaleUpperCase()}
-          </h2>
-          <Image
-            src={session?.user?.image ?? "/default-profile-image.jpg"}
-            alt="avatar"
-            width={50}
-            height={50}
-            className="mt-20 h-10 w-10 rounded-full"
-          />
+        <div className="mt-20 flex w-full items-start justify-between">
+          <div className="flex flex-col items-start">
+            <div className="flex items-center gap-x-2">
+              <h2 className="text-left">
+                Welcome! {session?.user?.name?.toLocaleUpperCase()}
+              </h2>
+              <Image
+                src={session?.user?.image ?? "/default-profile-image.jpg"}
+                alt="avatar"
+                width={50}
+                height={50}
+                className="h-10 w-10 rounded-full"
+              />
+            </div>
+            <div className="mt-4">
+              {trips && trips.length === 0 ? (
+                <div className="flex items-center space-x-4">
+                  <h2>Don't have any trips yet? Let's add one</h2>
+                  <Button onClick={() => router.push("/trip/add")}>
+                    Add Trip
+                  </Button>
+                </div>
+              ) : (
+                <h2>Your Trips:</h2>
+              )}
+            </div>
+          </div>
+          <div
+            onClick={() => router.push("/api/auth/signout")}
+            className="flex cursor-pointer items-center"
+          >
+            <FiLogOut className="h-8 w-8 text-right hover:text-gray-700" />
+          </div>
         </div>
 
-        {trips!.length === 0 ? (
-          <div className="flex space-x-4">
-            <h2>Don't have any trips yet? Let's add one</h2>
-            <Button onClick={() => router.push("/trip/add")}>Add Trip</Button>
-          </div>
-        ) : (
-          <div className="flex items-start space-x-4 text-left">
-            <h2>Your Trips:</h2>
-          </div>
-        )}
-        <div className="mt-6 w-full">
-          {trips!.length === 0 ? (
-            <p>No trips found.</p>
-          ) : (
-            trips!.map((trip: Trip) => (
+        {trips && trips.length > 0 && (
+          <div className="mt-4 w-full">
+            {trips.map((trip: Trip) => (
               <div
                 key={trip.id}
                 className="mb-4 flex flex-col justify-between rounded bg-white p-4 shadow-md hover:scale-[1.02] hover:cursor-pointer md:flex-row"
                 onClick={() => router.push(`/trip/info/${trip.id}`)}
               >
-                <div>
+                <div className="flex flex-col justify-center">
                   <h3 className="font-bold">{trip.name}</h3>
                   <p>
                     {trip.city}, {trip.state}, {trip.country}
                   </p>
                   <p>Duration: {trip.durationOfStay} days</p>
-                  <div className="flex gap-x-4">
-                    <Button
-                      onClick={() => router.push(`/trip/notes/${trip.id}`)}
-                      className="mt-4"
-                    >
-                      Add notes
-                    </Button>
-                    <Button
-                      onClick={() => router.push(`/trip/edit/${trip.id}`)}
-                      className="mt-4"
-                      variant={"outline"}
-                    >
-                      Edit Trip
-                    </Button>
-                  </div>
                 </div>
-                <div className="mt-8 md:mt-0">
-                  <h4>Flight Info</h4>
+                <div className="mt-8 justify-center md:mt-0">
+                  <h4 className="font-bold">Flight Info</h4>
                   <p>Flight Number: {trip.flightNumber}</p>
-                  <h4>Accomodation</h4>
+                  <h4 className="font-bold">Accommodation</h4>
                   <p>Hotel Details: {trip.hotelDetails}</p>
                   <div className="flex justify-start gap-x-2 md:justify-center">
                     <p className="font-bold">From:</p>
@@ -121,19 +117,13 @@ const Dashboard = () => {
                   </div>
                 </div>
               </div>
-            ))
-          )}
-        </div>
-        {trips!.length === 0 ? (
-          <></>
-        ) : (
-          <Button
-            onClick={() => router.push("/trip/add")}
-            className="mt-4"
-            size={"lg"}
-          >
-            Add Trip
-          </Button>
+            ))}
+            <div className="mt-4 flex justify-center">
+              <Button onClick={() => router.push("/trip/add")} size="lg">
+                Add Trip
+              </Button>
+            </div>
+          </div>
         )}
       </MaxWidthWrapper>
     </main>
