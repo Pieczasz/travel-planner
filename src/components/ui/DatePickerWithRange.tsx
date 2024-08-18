@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { format } from "date-fns";
+import { format, addDays, isBefore, isSameDay, isAfter } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 import type { DateRange } from "react-day-picker";
 
@@ -25,6 +25,29 @@ export function DatePickerWithRange({
   onChange,
   className,
 }: DatePickerWithRangeProps) {
+  // Today's date to restrict past selection
+  const today = new Date();
+
+  // Function to handle date selection with restrictions
+  const handleSelect = (range: DateRange | undefined) => {
+    if (range?.from && range.to) {
+      const diff =
+        (range.to.getTime() - range.from.getTime()) / (1000 * 60 * 60 * 24);
+      if (diff > 14) {
+        return; // Prevent selecting more than 14 days
+      }
+    }
+
+    if (
+      range?.from &&
+      (isBefore(range.from, today) || (range.to && isBefore(range.to, today)))
+    ) {
+      return; // Prevent selecting dates in the past
+    }
+
+    onChange(range);
+  };
+
   return (
     <div className={cn("grid gap-2", className)}>
       <Popover>
@@ -58,8 +81,10 @@ export function DatePickerWithRange({
             mode="range"
             defaultMonth={value?.from}
             selected={value}
-            onSelect={onChange}
+            onSelect={handleSelect}
             numberOfMonths={2}
+            fromDate={today} // Disable past dates
+            toDate={addDays(today, 365)} // Limit selection to within a year, for example
           />
         </PopoverContent>
       </Popover>
