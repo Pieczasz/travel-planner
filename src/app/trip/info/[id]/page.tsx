@@ -62,13 +62,17 @@ const Info = () => {
   const { data: tripDays, isLoading: isLoadingDays } =
     api.post.getTripDaysById.useQuery({ tripId: id });
 
-  const handleDelete = async () => {
-    try {
-      await api.post.delete.useMutation({});
-      router.push("/"); // Redirect to home or another page after deletion
-    } catch (error) {
+  const deleteMutation = api.post.delete.useMutation({
+    onSuccess: () => {
+      router.push("/");
+    },
+    onError: (error) => {
       console.error("Error deleting trip:", error);
-    }
+    },
+  });
+
+  const handleDelete = () => {
+    deleteMutation.mutate({ id });
   };
 
   useEffect(() => {
