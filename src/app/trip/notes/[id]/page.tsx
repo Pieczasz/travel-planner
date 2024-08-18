@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 "use client";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -65,6 +64,7 @@ export default function ManageTripDays() {
     isLoading: isTripLoading,
     error: tripError,
   } = api.post.getById.useQuery({ id });
+
   const {
     data: days,
     isLoading: isDaysLoading,
@@ -78,10 +78,11 @@ export default function ManageTripDays() {
     },
   });
 
+  // Initialize trip days when trip data changes
   useEffect(() => {
-    if (trip) {
-      const days = Array.from(
-        { length: trip[0]!.durationOfStay },
+    if (trip?.[0]?.durationOfStay) {
+      const initialTripDays = Array.from(
+        { length: trip[0].durationOfStay },
         (_, index) => ({
           dayNumber: index + 1,
           whatToDo: "",
@@ -89,17 +90,30 @@ export default function ManageTripDays() {
           notes: "",
         }),
       );
-      console.log(days);
-      setTripDays(days);
-      form.reset({ tripDays: days });
+      setTripDays(initialTripDays);
+      form.reset({ tripDays: initialTripDays });
     }
   }, [trip, form]);
 
+  // Update trip days when days data is fetched
   useEffect(() => {
     if (days) {
-      form.reset({ tripDays: days });
+      const updatedTripDays: TripDay[] = Array.from(
+        { length: trip?.[0]?.durationOfStay ?? 0 },
+        (_, index) => {
+          const day = days.find((day) => day.dayNumber === index + 1);
+          return {
+            dayNumber: index + 1,
+            whatToDo: day?.whatToDo ?? "",
+            budget: day?.budget ?? "", // Convert null to empty string
+            notes: day?.notes ?? "", // Convert null to empty string
+          };
+        },
+      );
+      setTripDays(updatedTripDays);
+      form.reset({ tripDays: updatedTripDays });
     }
-  }, [days, form]);
+  }, [days, trip, form]);
 
   const updateTripDays = api.post.updateTripDays.useMutation({
     onSuccess: () => {

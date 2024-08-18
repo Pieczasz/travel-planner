@@ -84,7 +84,7 @@ export function CreateTripForm() {
       flightNumber: "",
     },
   });
-  console.log(api);
+
   const createTrip = api.post.create.useMutation({
     onSuccess: () => {
       router.push("/dashboard");

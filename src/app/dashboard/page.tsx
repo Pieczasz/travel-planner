@@ -29,13 +29,13 @@ interface Trip {
   durationOfStay: number;
 }
 
-console.log(api);
+
 const Dashboard = () => {
   const { data: session } = useSession();
   const router = useRouter();
   const { data: trips, isLoading, error } = api.post.getAll.useQuery();
 
-  console.log(api);
+
   useEffect(() => {
     if (!session) {
       router.push("/");
@@ -83,7 +83,8 @@ const Dashboard = () => {
             trips!.map((trip: Trip) => (
               <div
                 key={trip.id}
-                className="mb-4 flex flex-col justify-between rounded bg-white p-4 shadow-md md:flex-row"
+                className="mb-4 flex flex-col justify-between rounded bg-white p-4 shadow-md hover:scale-[1.02] hover:cursor-pointer md:flex-row"
+                onClick={() => router.push(`/trip/info/${trip.id}`)}
               >
                 <div>
                   <h3 className="font-bold">{trip.name}</h3>

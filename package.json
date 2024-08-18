@@ -29,6 +29,7 @@
     "@trpc/next": "^11.0.0-rc.477",
     "@trpc/react-query": "^11.0.0-rc.477",
     "@trpc/server": "^11.0.0-rc.477",
+    "axios": "^1.7.4",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "country-state-city": "^3.2.1",
