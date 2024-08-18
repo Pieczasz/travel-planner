@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -38,24 +38,7 @@ interface TripDay {
   notes?: string;
 }
 
-interface Trip {
-  id: string;
-  name: string;
-  country: string;
-  state: string;
-  city: string;
-  hotelDetails: string | null;
-  durationOfStay: number;
-  flightNumber: string | null;
-  startDate: string;
-  endDate: string;
-  createdAt: string;
-  updatedAt: string;
-  userId: string;
-}
-
 export default function ManageTripDays() {
-  const [tripDays, setTripDays] = useState<TripDay[]>([]);
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
 
@@ -90,7 +73,7 @@ export default function ManageTripDays() {
           notes: "",
         }),
       );
-      setTripDays(initialTripDays);
+
       form.reset({ tripDays: initialTripDays });
     }
   }, [trip, form]);
@@ -110,7 +93,7 @@ export default function ManageTripDays() {
           };
         },
       );
-      setTripDays(updatedTripDays);
+
       form.reset({ tripDays: updatedTripDays });
     }
   }, [days, trip, form]);

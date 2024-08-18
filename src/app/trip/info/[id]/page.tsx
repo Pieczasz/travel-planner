@@ -47,11 +47,8 @@ const Info = () => {
   const router = useRouter();
 
   const { data: trip, isLoading, error } = api.post.getById.useQuery({ id });
-  const {
-    data: tripDays,
-    isLoading: isLoadingDays,
-    error: errorDays,
-  } = api.post.getTripDaysById.useQuery({ tripId: id });
+  const { data: tripDays, isLoading: isLoadingDays } =
+    api.post.getTripDaysById.useQuery({ tripId: id });
 
   useEffect(() => {
     if (!session) {
@@ -83,6 +80,7 @@ const Info = () => {
         } catch (error) {
           setErrorWeather((error as Error).message);
           setWeatherData(null);
+          console.log(errorWeather);
         }
       };
 
@@ -90,7 +88,7 @@ const Info = () => {
         console.error("Error fetching weather data:", error);
       });
     }
-  }, [trip, apiKey]);
+  }, [trip, apiKey, errorWeather]);
 
   if (isLoading || isLoadingDays) {
     return (
