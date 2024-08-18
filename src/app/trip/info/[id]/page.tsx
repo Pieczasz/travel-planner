@@ -82,7 +82,9 @@ const Info = () => {
           if (!response.ok) {
             throw new Error("Network response was not ok");
           }
+          /* eslint-disable  @typescript-eslint/no-explicit-any */
           const data = await response.json();
+
           setWeatherData(data);
           setErrorWeather(null);
         } catch (error) {
