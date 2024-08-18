@@ -105,7 +105,7 @@ const Info = () => {
 
   // Fetching weather data
 
-  const apiKey = env.WEATHER_API;
+  const apiKey = "19f10437487be9120c1af687fe4c9c74";
 
   useEffect(() => {
     if (trip && trip.length > 0) {
