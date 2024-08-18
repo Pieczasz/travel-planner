@@ -7,6 +7,17 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { api } from "@/trpc/react";
 import WeatherCard from "@/components/WeatherCard"; // Import WeatherCard
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface Trip {
   endDate: string;
@@ -45,10 +56,20 @@ const Info = () => {
   const { data: session } = useSession();
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const [open, setOpen] = useState(false);
 
   const { data: trip, isLoading, error } = api.post.getById.useQuery({ id });
   const { data: tripDays, isLoading: isLoadingDays } =
     api.post.getTripDaysById.useQuery({ tripId: id });
+
+  const handleDelete = async () => {
+    try {
+      await api.post.delete.useMutation({});
+      router.push("/"); // Redirect to home or another page after deletion
+    } catch (error) {
+      console.error("Error deleting trip:", error);
+    }
+  };
 
   useEffect(() => {
     if (!session) {
@@ -159,6 +180,37 @@ const Info = () => {
                   >
                     Edit Trip
                   </Button>
+                  <AlertDialog open={open} onOpenChange={setOpen}>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        onClick={() => setOpen(true)}
+                        className="mt-2"
+                        variant={"destructive"}
+                      >
+                        Delete Trip
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Trip</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete this trip? This action
+                          cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => {
+                            handleDelete();
+                            setOpen(false);
+                          }}
+                        >
+                          Confirm
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
               <div className="mt-8 md:mt-0">
