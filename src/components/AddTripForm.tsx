@@ -87,7 +87,7 @@ export function CreateTripForm() {
   console.log(api);
   const createTrip = api.post.create.useMutation({
     onSuccess: () => {
-      router.refresh();
+      router.push("/dashboard");
     },
     onError: (error: unknown) => {
       console.error("Error creating trip:", error);

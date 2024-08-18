@@ -2,11 +2,73 @@ import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 
-import { trips } from "@/server/db/schema";
+import { tripDays, trips } from "@/server/db/schema";
 
 import { and, eq } from "drizzle-orm";
 
 export const postRouter = createTRPCRouter({
+  addDay: protectedProcedure
+    .input(
+      z.object({
+        tripId: z.string().uuid(),
+        dayNumber: z.number().int().min(1),
+        whatToDo: z.string().min(1),
+        budget: z.string().optional(),
+        notes: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db.insert(tripDays).values({
+        tripId: input.tripId,
+        dayNumber: input.dayNumber,
+        whatToDo: input.whatToDo,
+        budget: input.budget ?? "",
+        notes: input.notes ?? "",
+      });
+    }),
+
+  updateTripDays: protectedProcedure
+    .input(
+      z.object({
+        tripId: z.string().uuid(),
+        tripDays: z.array(
+          z.object({
+            id: z.string().uuid().optional(), // Optional, for update purposes
+            dayNumber: z.number().int().min(1),
+            whatToDo: z.string().min(1),
+            budget: z.string().optional(),
+            notes: z.string().optional(),
+          }),
+        ),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { tripId, tripDays: newTripDays } = input;
+
+      // Delete existing days for the trip
+      await ctx.db.delete(tripDays).where(eq(tripDays.tripId, tripId));
+
+      // Insert new days
+      await ctx.db.insert(tripDays).values(
+        newTripDays.map((day) => ({
+          tripId,
+          dayNumber: day.dayNumber,
+          whatToDo: day.whatToDo,
+          budget: day.budget ?? "",
+          notes: day.notes ?? "",
+        })),
+      );
+    }),
+  // Get trip days by trip ID
+  getTripDaysById: protectedProcedure
+    .input(z.object({ tripId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const days = await ctx.db
+        .select()
+        .from(tripDays)
+        .where(eq(tripDays.tripId, input.tripId));
+      return days;
+    }),
   // Create a new trip
   create: protectedProcedure
     .input(
@@ -116,6 +178,22 @@ export const postRouter = createTRPCRouter({
         throw new Error(
           "Trip not found or you do not have access to this trip",
         );
+      }
+    }),
+
+  deleteTripDays: protectedProcedure
+    .input(z.object({ tripId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { tripId } = input;
+
+      // Delete all trip days for the given tripId
+      const result = await ctx.db
+        .delete(tripDays)
+        .where(eq(tripDays.tripId, tripId));
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+      if ((result as any).changes === 0) {
+        throw new Error("No trip days found for the provided trip ID");
       }
     }),
 

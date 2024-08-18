@@ -27,6 +27,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
 import { DateRange } from "react-day-picker";
+import MaxWidthWrapper from "@/components/MaxWidthWrapper";
 
 interface Trip {
   name: string;
@@ -96,27 +97,23 @@ export default function EditTrip() {
   const [selectedCity, setSelectedCity] = useState<ICity | null>(null);
 
   useEffect(() => {
-    if (trip) {
-      const {
-        name,
-        country,
-        state,
-        city,
-        hotelDetails,
-        startDate,
-        endDate,
-        flightNumber,
-      } = trip as unknown as Trip;
+    if (trip && trip.length > 0) {
+      const tripDetails = trip[0]; // Access the first object in the array
 
+      if (!tripDetails) {
+        return;
+      }
+
+      const { name, country, state, city, hotelDetails, flightNumber } =
+        tripDetails; // Extract details from tripDetails
+
+      // Set form values
       form.setValue("name", name);
       form.setValue("country", country);
       form.setValue("state", state);
       form.setValue("city", city);
       form.setValue("hotelDetails", hotelDetails ?? "");
-      form.setValue("dateRange", {
-        from: startDate ? new Date(startDate) : null,
-        to: endDate ? new Date(endDate) : null,
-      });
+
       form.setValue("flightNumber", flightNumber ?? "");
 
       // Set selected country, state, and city
@@ -170,9 +167,20 @@ export default function EditTrip() {
     form.setValue("city", value);
   };
 
-  const updateTrip = api.post.update.useMutation({
+  const deleteTripDays = api.post.deleteTripDays.useMutation({
     onSuccess: () => {
       router.push("/dashboard"); // Navigate back to trips list
+    },
+    onError: (error) => {
+      console.error("Failed to delete trip days:", error);
+    },
+  });
+
+  const updateTrip = api.post.update.useMutation({
+    onSuccess: () => {
+      if (trip) {
+        deleteTripDays.mutate({ tripId: trip[0]!.id });
+      } else router.push("/dashboard"); // Navigate back to trips list
     },
     onError: (error) => {
       console.error("Failed to update trip:", error);
@@ -202,7 +210,7 @@ export default function EditTrip() {
     }
   };
 
-  if (isLoading) return <p>Loading...</p>;
+  if (isLoading) return <div className="min-h-screen bg-gray-100"></div>;
   if (error) return <p>Error loading trip</p>;
 
   return (
@@ -211,195 +219,211 @@ export default function EditTrip() {
         onSubmit={form.handleSubmit(onSubmit)}
         className="my-10 flex w-full flex-col items-start justify-center gap-y-5"
       >
-        {/* Name Field */}
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Name</FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  placeholder="Enter trip name"
-                  className="w-full"
-                />
-              </FormControl>
-              <FormMessage>{form.formState.errors.name?.message}</FormMessage>
-            </FormItem>
-          )}
-        />
+        <MaxWidthWrapper>
+          <h1 className="text-center font-extrabold">Edit Trip</h1>
+          {/* Name Field */}
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    placeholder="Enter trip name"
+                    className="w-full"
+                  />
+                </FormControl>
+                <FormMessage>{form.formState.errors.name?.message}</FormMessage>
+              </FormItem>
+            )}
+          />
 
-        {/* Country Selector */}
-        <FormField
-          control={form.control}
-          name="country"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Country</FormLabel>
-              <FormControl>
-                <Select value={field.value} onValueChange={handleCountryChange}>
-                  <SelectTrigger className="w-[280px]">
-                    <SelectValue placeholder="Select a country" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Country.getAllCountries().map((country) => (
-                      <SelectItem key={country.isoCode} value={country.isoCode}>
-                        {country.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FormControl>
-              <FormMessage>
-                {form.formState.errors.country?.message}
-              </FormMessage>
-            </FormItem>
-          )}
-        />
-
-        {/* State Selector */}
-        <FormField
-          control={form.control}
-          name="state"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>State</FormLabel>
-              <FormControl>
-                <Select
-                  value={field.value}
-                  onValueChange={handleStateChange}
-                  disabled={!selectedCountry}
-                >
-                  <SelectTrigger className="w-[280px]">
-                    <SelectValue placeholder="Select a state" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {selectedCountry &&
-                      State.getStatesOfCountry(selectedCountry.isoCode).map(
-                        (state) => (
-                          <SelectItem key={state.isoCode} value={state.isoCode}>
-                            {state.name}
-                          </SelectItem>
-                        ),
-                      )}
-                  </SelectContent>
-                </Select>
-              </FormControl>
-              <FormMessage>{form.formState.errors.state?.message}</FormMessage>
-            </FormItem>
-          )}
-        />
-
-        {/* City Selector */}
-        <FormField
-          control={form.control}
-          name="city"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>City</FormLabel>
-              <FormControl>
-                <Select
-                  value={field.value}
-                  onValueChange={handleCityChange}
-                  disabled={!selectedState}
-                >
-                  <SelectTrigger className="w-[280px]">
-                    <SelectValue placeholder="Select a city" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {selectedState &&
-                      City.getCitiesOfState(
-                        selectedState.countryCode,
-                        selectedState.isoCode,
-                      ).map((city) => (
-                        <SelectItem key={city.name} value={city.name}>
-                          {city.name}
+          {/* Country Selector */}
+          <FormField
+            control={form.control}
+            name="country"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Country</FormLabel>
+                <FormControl>
+                  <Select
+                    value={field.value}
+                    onValueChange={handleCountryChange}
+                  >
+                    <SelectTrigger className="w-[280px]">
+                      <SelectValue placeholder="Select a country" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Country.getAllCountries().map((country) => (
+                        <SelectItem
+                          key={country.isoCode}
+                          value={country.isoCode}
+                        >
+                          {country.name}
                         </SelectItem>
                       ))}
-                  </SelectContent>
-                </Select>
-              </FormControl>
-              <FormMessage>{form.formState.errors.city?.message}</FormMessage>
-            </FormItem>
-          )}
-        />
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage>
+                  {form.formState.errors.country?.message}
+                </FormMessage>
+              </FormItem>
+            )}
+          />
 
-        {/* Hotel Details Field */}
-        <FormField
-          control={form.control}
-          name="hotelDetails"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Hotel Details</FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  placeholder="Enter hotel details"
-                  className="w-full"
-                />
-              </FormControl>
-              <FormMessage>
-                {form.formState.errors.hotelDetails?.message}
-              </FormMessage>
-            </FormItem>
-          )}
-        />
+          {/* State Selector */}
+          <FormField
+            control={form.control}
+            name="state"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>State</FormLabel>
+                <FormControl>
+                  <Select
+                    value={field.value}
+                    onValueChange={handleStateChange}
+                    disabled={!selectedCountry}
+                  >
+                    <SelectTrigger className="w-[280px]">
+                      <SelectValue placeholder="Select a state" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {selectedCountry &&
+                        State.getStatesOfCountry(selectedCountry.isoCode).map(
+                          (state) => (
+                            <SelectItem
+                              key={state.isoCode}
+                              value={state.isoCode}
+                            >
+                              {state.name}
+                            </SelectItem>
+                          ),
+                        )}
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage>
+                  {form.formState.errors.state?.message}
+                </FormMessage>
+              </FormItem>
+            )}
+          />
 
-        {/* Date Range Picker */}
-        <FormField
-          control={form.control}
-          name="dateRange"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Dates</FormLabel>
-              <FormControl>
-                <DatePickerWithRange
-                  {...field}
-                  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                  value={field.value as DateRange}
-                  onChange={(range) => {
-                    if (range) {
-                      form.setValue("dateRange", {
-                        from: range.from ?? null,
-                        to: range.to ?? null,
-                      });
-                    } else {
-                      form.setValue("dateRange", { from: null, to: null });
-                    }
-                  }}
-                />
-              </FormControl>
-              <FormMessage>
-                {form.formState.errors.dateRange?.from?.message}
-                {form.formState.errors.dateRange?.to?.message}
-              </FormMessage>
-            </FormItem>
-          )}
-        />
+          {/* City Selector */}
+          <FormField
+            control={form.control}
+            name="city"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>City</FormLabel>
+                <FormControl>
+                  <Select
+                    value={field.value}
+                    onValueChange={handleCityChange}
+                    disabled={!selectedState}
+                  >
+                    <SelectTrigger className="w-[280px]">
+                      <SelectValue placeholder="Select a city" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {selectedState &&
+                        City.getCitiesOfState(
+                          selectedState.countryCode,
+                          selectedState.isoCode,
+                        ).map((city) => (
+                          <SelectItem key={city.name} value={city.name}>
+                            {city.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage>{form.formState.errors.city?.message}</FormMessage>
+              </FormItem>
+            )}
+          />
 
-        {/* Flight Number Field */}
-        <FormField
-          control={form.control}
-          name="flightNumber"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Flight Number</FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  placeholder="Enter flight number"
-                  className="w-full"
-                />
-              </FormControl>
-              <FormMessage>
-                {form.formState.errors.flightNumber?.message}
-              </FormMessage>
-            </FormItem>
-          )}
-        />
+          {/* Hotel Details Field */}
+          <FormField
+            control={form.control}
+            name="hotelDetails"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Hotel Details</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    placeholder="Enter hotel details"
+                    className="w-full"
+                  />
+                </FormControl>
+                <FormMessage>
+                  {form.formState.errors.hotelDetails?.message}
+                </FormMessage>
+              </FormItem>
+            )}
+          />
 
-        <Button type="submit">Save Trip</Button>
+          {/* Date Range Picker */}
+          <FormField
+            control={form.control}
+            name="dateRange"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Dates</FormLabel>
+                <FormControl>
+                  <DatePickerWithRange
+                    {...field}
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                    value={field.value as DateRange}
+                    onChange={(range) => {
+                      if (range) {
+                        form.setValue("dateRange", {
+                          from: range.from ?? null,
+                          to: range.to ?? null,
+                        });
+                      } else {
+                        form.setValue("dateRange", { from: null, to: null });
+                      }
+                    }}
+                  />
+                </FormControl>
+                <FormMessage>
+                  {form.formState.errors.dateRange?.from?.message}
+                  {form.formState.errors.dateRange?.to?.message}
+                </FormMessage>
+              </FormItem>
+            )}
+          />
+
+          {/* Flight Number Field */}
+          <FormField
+            control={form.control}
+            name="flightNumber"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Flight Number</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    placeholder="Enter flight number"
+                    className="w-full"
+                  />
+                </FormControl>
+                <FormMessage>
+                  {form.formState.errors.flightNumber?.message}
+                </FormMessage>
+              </FormItem>
+            )}
+          />
+
+          <Button type="submit" className="mt-6">
+            Save Trip
+          </Button>
+        </MaxWidthWrapper>
       </form>
     </Form>
   );

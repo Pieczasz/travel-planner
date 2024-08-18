@@ -43,7 +43,7 @@ const Dashboard = () => {
   }, [session, router]);
 
   if (isLoading) {
-    return <div></div>;
+    return <div className="min-h-screen bg-gray-100"></div>;
   }
 
   if (error) {
@@ -52,7 +52,7 @@ const Dashboard = () => {
 
   return (
     <main className="flex min-h-screen w-full bg-gray-100 text-black">
-      <MaxWidthWrapper>
+      <MaxWidthWrapper className="flex flex-col items-center">
         <div className="flex items-center justify-center space-x-4">
           <h2 className="mt-20 text-center">
             Welcome! {session?.user?.name?.toLocaleUpperCase()}
@@ -72,12 +72,11 @@ const Dashboard = () => {
             <Button onClick={() => router.push("/trip/add")}>Add Trip</Button>
           </div>
         ) : (
-          <div className="flex space-x-4">
+          <div className="flex items-start space-x-4 text-left">
             <h2>Your Trips:</h2>
-            <Button onClick={() => router.push("/trip/add")}>Add Trip</Button>
           </div>
         )}
-        <div className="mt-6">
+        <div className="mt-6 w-full">
           {trips!.length === 0 ? (
             <p>No trips found.</p>
           ) : (
@@ -92,12 +91,21 @@ const Dashboard = () => {
                     {trip.city}, {trip.state}, {trip.country}
                   </p>
                   <p>Duration: {trip.durationOfStay} days</p>
-                  <Button
-                    onClick={() => router.push(`/trip/edit/${trip.id}`)}
-                    className="mt-4"
-                  >
-                    Edit Trip
-                  </Button>
+                  <div className="flex gap-x-4">
+                    <Button
+                      onClick={() => router.push(`/trip/notes/${trip.id}`)}
+                      className="mt-4"
+                    >
+                      Add notes
+                    </Button>
+                    <Button
+                      onClick={() => router.push(`/trip/edit/${trip.id}`)}
+                      className="mt-4"
+                      variant={"outline"}
+                    >
+                      Edit Trip
+                    </Button>
+                  </div>
                 </div>
                 <div className="mt-8 md:mt-0">
                   <h4>Flight Info</h4>
@@ -115,6 +123,17 @@ const Dashboard = () => {
             ))
           )}
         </div>
+        {trips!.length === 0 ? (
+          <></>
+        ) : (
+          <Button
+            onClick={() => router.push("/trip/add")}
+            className="mt-4"
+            size={"lg"}
+          >
+            Add Trip
+          </Button>
+        )}
       </MaxWidthWrapper>
     </main>
   );
