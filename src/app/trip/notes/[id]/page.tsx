@@ -1,7 +1,12 @@
 "use client";
+
+// Functions
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+
+// Components
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,26 +17,30 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+
+import MaxWidthWrapper from "@/components/MaxWidthWrapper";
+
+// zod
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import MaxWidthWrapper from "@/components/MaxWidthWrapper";
+
+// TRPC
 import { api } from "@/trpc/react";
 
-// Define the schema for trip days
 const tripDaysSchema = z.object({
   tripDays: z.array(
     z.object({
       id: z.string().uuid().optional(),
       dayNumber: z.number().int().min(1).max(14),
       whatToDo: z.string().min(1),
-      budget: z.string().nullable(), // Allow null values
-      notes: z.string().nullable(), // Allow null values
+      budget: z.string().nullable(),
+      notes: z.string().nullable(),
     }),
   ),
 });
 
 interface TripDay {
-  id?: string; // Optional for new entries
+  id?: string;
   dayNumber: number;
   whatToDo: string;
   budget?: string;
@@ -40,7 +49,17 @@ interface TripDay {
 
 export default function ManageTripDays() {
   const { id } = useParams<{ id: string }>();
+
+  const { data: session } = useSession();
+
   const router = useRouter();
+
+  // Redirect to dashboard if user isn't already authenticated
+  useEffect(() => {
+    if (!session) {
+      router.push("/");
+    }
+  }, [session, router]);
 
   const {
     data: trip,
@@ -88,8 +107,8 @@ export default function ManageTripDays() {
           return {
             dayNumber: index + 1,
             whatToDo: day?.whatToDo ?? "",
-            budget: day?.budget ?? "", // Convert null to empty string
-            notes: day?.notes ?? "", // Convert null to empty string
+            budget: day?.budget ?? "",
+            notes: day?.notes ?? "",
           };
         },
       );
@@ -100,11 +119,10 @@ export default function ManageTripDays() {
 
   const updateTripDays = api.post.updateTripDays.useMutation({
     onSuccess: () => {
-      router.push("/dashboard"); // Navigate back to trips list
+      router.push("/dashboard");
     },
     onError: (error) => {
       console.error("Failed to update trip days:", error);
-      // Display an error message or handle it accordingly
     },
   });
 
@@ -114,8 +132,8 @@ export default function ManageTripDays() {
         tripId: trip[0]!.id,
         tripDays: data.tripDays.map((day) => ({
           ...day,
-          budget: day.budget ?? "", // Convert null to empty string if needed
-          notes: day.notes ?? "", // Convert null to empty string if needed
+          budget: day.budget ?? "",
+          notes: day.notes ?? "",
         })),
       });
     }

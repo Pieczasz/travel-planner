@@ -1,20 +1,22 @@
 "use client";
 
+// Functions
 import React from "react";
-
-import MaxWidthWrapper from "@/components/MaxWidthWrapper";
+import { useEffect } from "react";
 
 import { useSession } from "next-auth/react";
 
 import { useRouter } from "next/navigation";
 
-import { useEffect } from "react";
-
+// Components
+import MaxWidthWrapper from "@/components/MaxWidthWrapper";
 import AddTripForm from "@/components/AddTripForm";
+
 const AddTrip = () => {
   const { data: session } = useSession();
   const router = useRouter();
 
+  // Redirect to dashboard if user isn't already authenticated
   useEffect(() => {
     if (!session) {
       router.push("/");

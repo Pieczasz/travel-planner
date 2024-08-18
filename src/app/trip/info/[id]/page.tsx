@@ -1,12 +1,15 @@
 "use client";
+
+// Functions
 import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
+
+// Components
 import MaxWidthWrapper from "@/components/MaxWidthWrapper";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { api } from "@/trpc/react";
-import WeatherCard from "@/components/WeatherCard"; // Import WeatherCard
+import WeatherCard from "@/components/WeatherCard";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,6 +21,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+
+// TRPC
+import { api } from "@/trpc/react";
+
+// env for weather api
+import { env } from "@/env";
 
 interface Trip {
   endDate: string;
@@ -53,10 +62,22 @@ interface WeatherData {
 }
 
 const Info = () => {
-  const { data: session } = useSession();
-  const { id } = useParams<{ id: string }>();
-  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+  const [errorWeather, setErrorWeather] = useState<string | null>(null);
+
+  const { data: session } = useSession();
+
+  const { id } = useParams<{ id: string }>();
+
+  const router = useRouter();
+
+  // Redirect to dashboard if user isn't already authenticated
+  useEffect(() => {
+    if (!session) {
+      router.push("/");
+    }
+  }, [session, router]);
 
   const { data: trip, isLoading, error } = api.post.getById.useQuery({ id });
   const { data: tripDays, isLoading: isLoadingDays } =
@@ -71,6 +92,7 @@ const Info = () => {
     },
   });
 
+  // Handling trip deletion
   const handleDelete = () => {
     deleteMutation.mutate({ id });
   };
@@ -81,10 +103,9 @@ const Info = () => {
     }
   }, [session, router]);
 
-  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
-  const [errorWeather, setErrorWeather] = useState<string | null>(null);
+  // Fetching weather data
 
-  const apiKey = "19f10437487be9120c1af687fe4c9c74";
+  const apiKey = env.WEATHER_API;
 
   useEffect(() => {
     if (trip && trip.length > 0) {
@@ -117,9 +138,7 @@ const Info = () => {
 
   if (isLoading || isLoadingDays) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-100">
-        Loading...
-      </div>
+      <div className="flex min-h-screen items-center justify-center bg-gray-100"></div>
     );
   }
 

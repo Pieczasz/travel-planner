@@ -1,5 +1,6 @@
 import "@/styles/globals.css";
 
+// Poppins font for whole project
 import { Poppins } from "next/font/google";
 
 const poppins = Poppins({
@@ -9,17 +10,22 @@ const poppins = Poppins({
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
 });
 
-import { type Metadata } from "next";
+// Components
 
-import { TRPCReactProvider } from "@/trpc/react";
 import Footer from "@/components/Footer";
 import Provider from "@/components/Provider";
+
+// Meta
+import { type Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Travel Planner",
   description: "Plan your travels with ease. by ZGDGZ",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
+
+// TRPC
+import { TRPCReactProvider } from "@/trpc/react";
 
 export default function RootLayout({
   children,

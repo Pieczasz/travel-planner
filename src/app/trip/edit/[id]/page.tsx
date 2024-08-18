@@ -1,7 +1,11 @@
 "use client";
+
+// Functions
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { api } from "@/trpc/react";
+import { useSession } from "next-auth/react";
+
+// Components
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
@@ -21,13 +25,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import MaxWidthWrapper from "@/components/MaxWidthWrapper";
+
+// TRPC
+import { api } from "@/trpc/react";
+
+// Country State City
 import { Country, State, City } from "country-state-city";
 import type { ICountry, IState } from "country-state-city";
+
+// zod
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+
+// Date formating
 import { format } from "date-fns";
 import type { DateRange } from "react-day-picker";
-import MaxWidthWrapper from "@/components/MaxWidthWrapper";
 
 // Zod Schema for Form Validation
 const tripFormSchema = z.object({
@@ -55,7 +68,13 @@ const tripFormSchema = z.object({
 });
 
 export default function EditTrip() {
+  const [selectedCountry, setSelectedCountry] = useState<ICountry | null>(null);
+  const [selectedState, setSelectedState] = useState<IState | null>(null);
+
+  const { data: session } = useSession();
+
   const { id } = useParams<{ id: string }>();
+
   const router = useRouter();
 
   const { data: trip, isLoading, error } = api.post.getById.useQuery({ id });
@@ -75,13 +94,16 @@ export default function EditTrip() {
       flightNumber: "",
     },
   });
-
-  const [selectedCountry, setSelectedCountry] = useState<ICountry | null>(null);
-  const [selectedState, setSelectedState] = useState<IState | null>(null);
+  // Redirect to dashboard if user isn't already authenticated
+  useEffect(() => {
+    if (!session) {
+      router.push("/");
+    }
+  }, [session, router]);
 
   useEffect(() => {
     if (trip && trip.length > 0) {
-      const tripDetails = trip[0]; // Access the first object in the array
+      const tripDetails = trip[0];
 
       if (!tripDetails) {
         return;
@@ -117,7 +139,7 @@ export default function EditTrip() {
   const handleCountryChange = (value: string) => {
     const country = Country.getAllCountries().find((c) => c.isoCode === value);
     setSelectedCountry(country ?? null);
-    setSelectedState(null); // Reset state and city
+    setSelectedState(null);
     form.setValue("country", value);
   };
 
@@ -137,7 +159,7 @@ export default function EditTrip() {
 
   const deleteTripDays = api.post.deleteTripDays.useMutation({
     onSuccess: () => {
-      router.push("/dashboard"); // Navigate back to trips list
+      router.push("/dashboard");
     },
     onError: (error) => {
       console.error("Failed to delete trip days:", error);
@@ -148,11 +170,10 @@ export default function EditTrip() {
     onSuccess: () => {
       if (trip) {
         deleteTripDays.mutate({ tripId: trip[0]!.id });
-      } else router.push("/dashboard"); // Navigate back to trips list
+      } else router.push("/dashboard");
     },
     onError: (error) => {
       console.error("Failed to update trip:", error);
-      // You can display an error message or handle it accordingly
     },
   });
 

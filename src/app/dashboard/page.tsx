@@ -33,10 +33,13 @@ interface Trip {
 }
 
 const Dashboard = () => {
+  
   const { data: session } = useSession();
   const router = useRouter();
+
   const { data: trips, isLoading, error } = api.post.getAll.useQuery();
 
+  // Redirect to dashboard if user isn't already authenticated
   useEffect(() => {
     if (!session) {
       router.push("/");

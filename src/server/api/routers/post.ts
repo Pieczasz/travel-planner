@@ -7,6 +7,7 @@ import { tripDays, trips } from "@/server/db/schema";
 import { and, eq } from "drizzle-orm";
 
 export const postRouter = createTRPCRouter({
+  // Adding days to a trip
   addDay: protectedProcedure
     .input(
       z.object({
@@ -27,6 +28,7 @@ export const postRouter = createTRPCRouter({
       });
     }),
 
+  // Updating trip days
   updateTripDays: protectedProcedure
     .input(
       z.object({
@@ -45,7 +47,7 @@ export const postRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const { tripId, tripDays: newTripDays } = input;
 
-      // Delete existing days for the trip
+      // Delete existing days for the trip after editing
       await ctx.db.delete(tripDays).where(eq(tripDays.tripId, tripId));
 
       // Insert new days
@@ -59,6 +61,7 @@ export const postRouter = createTRPCRouter({
         })),
       );
     }),
+
   // Get trip days by trip ID
   getTripDaysById: protectedProcedure
     .input(z.object({ tripId: z.string().uuid() }))
@@ -69,6 +72,7 @@ export const postRouter = createTRPCRouter({
         .where(eq(tripDays.tripId, input.tripId));
       return days;
     }),
+
   // Create a new trip
   create: protectedProcedure
     .input(

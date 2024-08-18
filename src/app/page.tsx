@@ -1,19 +1,24 @@
 "use client";
 
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import MaxWidthWrapper from "@/components/MaxWidthWrapper";
-import Image from "next/image";
+// Functions
 
 import { useSession } from "next-auth/react";
 
 import { useRouter } from "next/navigation";
 
 import { useEffect } from "react";
+
+// Components
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import MaxWidthWrapper from "@/components/MaxWidthWrapper";
+import Image from "next/image";
+
 export default function Home() {
   const { data: session } = useSession();
   const router = useRouter();
 
+  // Redirect to dashboard if user is already authenticated
   useEffect(() => {
     if (session) {
       router.push("/dashboard");

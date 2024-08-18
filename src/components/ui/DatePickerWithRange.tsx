@@ -84,7 +84,7 @@ export function DatePickerWithRange({
             onSelect={handleSelect}
             numberOfMonths={2}
             fromDate={today} // Disable past dates
-            toDate={addDays(today, 365)} // Limit selection to within a year, for example
+            toDate={addDays(today, 365)}
           />
         </PopoverContent>
       </Popover>
