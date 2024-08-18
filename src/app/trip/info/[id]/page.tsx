@@ -6,8 +6,7 @@ import MaxWidthWrapper from "@/components/MaxWidthWrapper";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { api } from "@/trpc/react";
-import WeatherCard from "@/components/WeatherCard";
-import * as AlertDialog from "@radix-ui/react-alert-dialog";
+import WeatherCard from "@/components/WeatherCard"; // Import WeatherCard
 
 interface Trip {
   endDate: string;
@@ -32,7 +31,7 @@ interface TripDay {
 }
 
 interface WeatherData {
-  dt: number;
+  dt: number; // Unix timestamp
   main: {
     temp: number;
     humidity: number;
@@ -50,15 +49,6 @@ const Info = () => {
   const { data: trip, isLoading, error } = api.post.getById.useQuery({ id });
   const { data: tripDays, isLoading: isLoadingDays } =
     api.post.getTripDaysById.useQuery({ tripId: id });
-
-  const { mutate: deleteTrip } = api.post.delete.useMutation({
-    onSuccess: () => {
-      router.push("/"); // Redirect to another page after deletion
-    },
-    onError: (error) => {
-      console.error("Error deleting trip:", error);
-    },
-  });
 
   useEffect(() => {
     if (!session) {
@@ -82,9 +72,9 @@ const Info = () => {
           if (!response.ok) {
             throw new Error("Network response was not ok");
           }
-          /* eslint-disable  @typescript-eslint/no-explicit-any */
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           const data = await response.json();
-
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
           setWeatherData(data);
           setErrorWeather(null);
         } catch (error) {
@@ -99,10 +89,6 @@ const Info = () => {
       });
     }
   }, [trip, apiKey, errorWeather]);
-
-  const handleDelete = () => {
-    deleteTrip({ id });
-  };
 
   if (isLoading || isLoadingDays) {
     return (
@@ -173,35 +159,6 @@ const Info = () => {
                   >
                     Edit Trip
                   </Button>
-                  <AlertDialog.Root>
-                    <AlertDialog.Trigger asChild>
-                      <Button className="mt-2" variant={"destructive"}>
-                        Delete Trip
-                      </Button>
-                    </AlertDialog.Trigger>
-                    <AlertDialog.Overlay className="alert-dialog fixed z-50 bg-black/30" />
-                    <AlertDialog.Content className="alert-dialog fixed left-[50%] top-[50%] z-50 translate-x-[-50%] translate-y-[-50%] rounded-md bg-white p-6 shadow-lg">
-                      <AlertDialog.Title className="text-lg font-bold">
-                        Are you absolutely sure?
-                      </AlertDialog.Title>
-                      <AlertDialog.Description className="mt-2">
-                        This action cannot be undone. This will permanently
-                        delete the trip and remove it from our records.
-                      </AlertDialog.Description>
-                      <div className="mt-4 flex justify-end gap-x-4">
-                        <AlertDialog.Cancel asChild className="rounded-md">
-                          <Button variant={"outline"}>Cancel</Button>
-                        </AlertDialog.Cancel>
-                        <AlertDialog.Action
-                          asChild
-                          className="rounded-md bg-red-600 p-2 text-white hover:bg-red-700"
-                          onClick={handleDelete}
-                        >
-                          <Button>Delete</Button>
-                        </AlertDialog.Action>
-                      </div>
-                    </AlertDialog.Content>
-                  </AlertDialog.Root>
                 </div>
               </div>
               <div className="mt-8 md:mt-0">
@@ -226,31 +183,42 @@ const Info = () => {
               Trip Itinerary
             </h2>
             {tripDays.map((day: TripDay) => (
-              <div key={day.id} className="mb-4 rounded bg-white p-4 shadow-md">
-                <h3 className="font-bold">Day {day.dayNumber}</h3>
-                <p>What to do: {day.whatToDo}</p>
-                {day.budget && <p>Budget: {day.budget}</p>}
-                {day.notes && <p>Notes: {day.notes}</p>}
+              <div
+                className="mb-4 rounded border bg-white p-4 shadow-md"
+                key={day.id}
+              >
+                <h4 className="font-bold">Day {day.dayNumber}</h4>
+                <p>
+                  <span className="font-bold">What to Do:</span> {day.whatToDo}
+                </p>
+                {day.budget && (
+                  <p>
+                    <span className="font-bold">Budget:</span> {day.budget}
+                  </p>
+                )}
+                {day.notes && (
+                  <p>
+                    <span className="font-bold">Notes:</span> {day.notes}
+                  </p>
+                )}
               </div>
             ))}
           </div>
         )}
-        <div className="weather-card flex w-full flex-col items-center justify-center pt-8">
-          {weatherData && (
+
+        {weatherData && (
+          <div className="mt-8 w-full">
+            <h2 className="mb-6 text-center text-xl font-bold">
+              Weather Forecast
+            </h2>
             <WeatherCard
               city={trip[0]!.city}
               temperature={weatherData.main.temp}
               humidity={weatherData.main.humidity}
               windSpeed={weatherData.wind.speed}
             />
-          )}
-
-          {errorWeather && (
-            <div className="mt-4 text-black">
-              No weather data found for {trip[0]!.city}
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </MaxWidthWrapper>
     </main>
   );
