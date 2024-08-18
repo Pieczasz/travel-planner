@@ -32,7 +32,6 @@ interface TripDay {
 }
 
 interface WeatherData {
-  dt: number;
   main: {
     temp: number;
     humidity: number;
@@ -82,13 +81,16 @@ const Info = () => {
           if (!response.ok) {
             throw new Error("Network response was not ok");
           }
-          /* eslint-disable  @typescript-eslint/no-explicit-any */
-          const data = await response.json();
+          const data: WeatherData = await response.json(); // Type assertion here
 
           setWeatherData(data);
           setErrorWeather(null);
         } catch (error) {
-          setErrorWeather((error as Error).message);
+          if (error instanceof Error) {
+            setErrorWeather(error.message);
+          } else {
+            setErrorWeather("Unknown error occurred");
+          }
           setWeatherData(null);
           console.log(errorWeather);
         }
