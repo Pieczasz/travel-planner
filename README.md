@@ -11,4 +11,3 @@ due to its usefulness and functionality.
 We are a group of Polish high school students studying IT technology. We decided to participate in the Hackathon to test our programming skills and see how far we could go as a team. We want not only to test our capabilities, but also to gain valuable experience that will help us in our further development.
 - Bartłomiej Piekarz
 - Dariusz Tutak
-- Jakub Majchrzak
