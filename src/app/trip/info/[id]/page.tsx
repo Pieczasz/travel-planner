@@ -6,7 +6,18 @@ import MaxWidthWrapper from "@/components/MaxWidthWrapper";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { api } from "@/trpc/react";
-import WeatherCard from "@/components/WeatherCard"; // Import WeatherCard
+import WeatherCard from "@/components/WeatherCard";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 
 interface Trip {
   endDate: string;
@@ -31,7 +42,7 @@ interface TripDay {
 }
 
 interface WeatherData {
-  dt: number; // Unix timestamp
+  dt: number;
   main: {
     temp: number;
     humidity: number;
@@ -58,6 +69,7 @@ const Info = () => {
 
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [errorWeather, setErrorWeather] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
 
   const apiKey = "19f10437487be9120c1af687fe4c9c74";
 
@@ -72,15 +84,12 @@ const Info = () => {
           if (!response.ok) {
             throw new Error("Network response was not ok");
           }
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           const data = await response.json();
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
           setWeatherData(data);
           setErrorWeather(null);
         } catch (error) {
           setErrorWeather((error as Error).message);
           setWeatherData(null);
-          console.log(errorWeather);
         }
       };
 
@@ -88,7 +97,22 @@ const Info = () => {
         console.error("Error fetching weather data:", error);
       });
     }
-  }, [trip, apiKey, errorWeather]);
+  }, [trip, apiKey]);
+
+  const handleDelete = async () => {
+    try {
+      await api.post.delete.useMutation({
+        onSuccess: () => {
+          router.push("/");
+        },
+        onError: (error) => {
+          console.error("Error deleting trip:", error);
+        },
+      });
+    } catch (error) {
+      console.error("Error deleting trip:", error);
+    }
+  };
 
   if (isLoading || isLoadingDays) {
     return (
@@ -159,6 +183,37 @@ const Info = () => {
                   >
                     Edit Trip
                   </Button>
+                  <AlertDialog open={open} onOpenChange={setOpen}>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        onClick={() => setOpen(true)}
+                        className="mt-2"
+                        variant={"destructive"}
+                      >
+                        Delete Trip
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Trip</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete this trip? This action
+                          cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => {
+                            handleDelete();
+                            setOpen(false);
+                          }}
+                        >
+                          Confirm
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
               <div className="mt-8 md:mt-0">
