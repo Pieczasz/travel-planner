@@ -17,6 +17,10 @@ import { Button } from "@/components/ui/button";
 import { api } from "@/trpc/react";
 
 interface Trip {
+  endDate: string;
+  startDate: string;
+  hotelDetails: string | null;
+  flightNumber: string | null;
   id: string;
   name: string;
   city: string;
@@ -80,16 +84,33 @@ const Dashboard = () => {
             trips!.map((trip: Trip) => (
               <div
                 key={trip.id}
-                className="mb-4 rounded bg-white p-4 shadow-md"
+                className="mb-4 flex flex-col justify-between rounded bg-white p-4 shadow-md md:flex-row"
               >
-                <h3>{trip.name}</h3>
-                <p>
-                  {trip.city}, {trip.state}, {trip.country}
-                </p>
-                <p>Duration: {trip.durationOfStay} days</p>
-                <Button onClick={() => router.push(`/trip/edit/${trip.id}`)}>
-                  Edit Trip
-                </Button>
+                <div>
+                  <h3 className="font-bold">{trip.name}</h3>
+                  <p>
+                    {trip.city}, {trip.state}, {trip.country}
+                  </p>
+                  <p>Duration: {trip.durationOfStay} days</p>
+                  <Button
+                    onClick={() => router.push(`/trip/edit/${trip.id}`)}
+                    className="mt-4"
+                  >
+                    Edit Trip
+                  </Button>
+                </div>
+                <div className="mt-8 md:mt-0">
+                  <h4>Flight Info</h4>
+                  <p>Flight Number: {trip.flightNumber}</p>
+                  <h4>Accomodation</h4>
+                  <p>Hotel Details: {trip.hotelDetails}</p>
+                  <div className="flex justify-start gap-x-2 md:justify-center">
+                    <p className="font-bold">From:</p>
+                    <p>{trip.startDate}</p>
+                    <p className="font-bold">To:</p>
+                    <p>{trip.endDate}</p>
+                  </div>
+                </div>
               </div>
             ))
           )}
